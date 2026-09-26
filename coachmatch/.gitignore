@@ -1,0 +1,8 @@
+node_modules
+.next
+.env.local
+.vercel
+.coachmatch-backup-*/
+coachmatch_*_bundle.json
+coachmatch_apply_*.ps1
+*.zip

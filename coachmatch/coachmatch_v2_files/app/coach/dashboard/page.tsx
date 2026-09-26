@@ -1,4 +1,4 @@
-﻿import { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Banknote, CalendarDays, Settings2, Star, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -20,7 +20,7 @@ type Booking = {
   status: string;
   athlete_id: string;
   coach_net?: number | null;
-  profiles?: { full_name: string | null; phone?: string | null }[] | null;
+  profiles?: { full_name: string | null; phone?: string | null } | null;
 };
 
 export default async function CoachDashboard() {
@@ -115,7 +115,7 @@ export default async function CoachDashboard() {
                   end_time: booking.end_time,
                   location: booking.location,
                   status: booking.status,
-                  athleteName: booking.profiles?.[0]?.full_name ?? "متدرب",
+                  athleteName: booking.profiles?.full_name ?? "متدرب",
                   athletePhone: "",
                 }}
               />
@@ -141,8 +141,8 @@ export default async function CoachDashboard() {
                   end_time: booking.end_time,
                   location: booking.location,
                   status: booking.status,
-                  athleteName: booking.profiles?.[0]?.full_name ?? "متدرب",
-                  athletePhone: booking.profiles?.[0]?.phone ?? "",
+                  athleteName: booking.profiles?.full_name ?? "متدرب",
+                  athletePhone: booking.profiles?.phone ?? "",
                 }}
               />
             ))}
@@ -182,4 +182,3 @@ function Stat({
     </div>
   );
 }
-
