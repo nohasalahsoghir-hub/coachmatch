@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -44,7 +44,7 @@ export async function signUp(
 
   // If the user selected "coach", create the linked coaches row too.
   if (role === "coach" && data.user) {
-    await supabase.from("coaches").insert({ id: data.user.id });
+    await (supabase.from("coaches") as any).insert({ id: data.user.id });
   }
 
   revalidatePath("/", "layout");
@@ -73,3 +73,5 @@ export async function logout() {
   revalidatePath("/", "layout");
   redirect("/auth/login");
 }
+
+
