@@ -1,34 +1,3 @@
 "use client";
-
-import { useRouter, useSearchParams } from "next/navigation";
-
-const SPORTS = ["الكل", "Fitness", "Swimming", "Martial Arts"];
-
-export function CoachFilters() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const active = searchParams.get("sport") ?? "الكل";
-
-  function selectSport(sport: string) {
-    const params = new URLSearchParams(searchParams);
-    if (sport === "الكل") params.delete("sport");
-    else params.set("sport", sport);
-    router.push(`/coaches?${params.toString()}`);
-  }
-
-  return (
-    <div className="flex gap-2 overflow-x-auto pb-1">
-      {SPORTS.map((sport) => (
-        <button
-          key={sport}
-          onClick={() => selectSport(sport)}
-          className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold ${
-            active === sport ? "bg-emerald-600 text-white" : "bg-neutral-800 text-neutral-400"
-          }`}
-        >
-          {sport}
-        </button>
-      ))}
-    </div>
-  );
-}
+import {useRouter,useSearchParams} from "next/navigation";
+export function CoachFilters({sports}:{sports:{slug:string;name_ar:string}[]}){const router=useRouter();const params=useSearchParams();const active=params.get("sport")??"all";const go=(s:string)=>{const p=new URLSearchParams(params);if(s==="all")p.delete("sport");else p.set("sport",s);router.push(p.toString()?`/coaches?${p}`:"/coaches")};return <div className="flex gap-2 overflow-x-auto pb-1"><button onClick={()=>go("all")} className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold ${active==="all"?"bg-emerald-600 text-white":"bg-neutral-800 text-neutral-400"}`}>الكل</button>{sports.map(s=><button key={s.slug} onClick={()=>go(s.slug)} className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold ${active===s.slug?"bg-emerald-600 text-white":"bg-neutral-800 text-neutral-400"}`}>{s.name_ar}</button>)}</div>}

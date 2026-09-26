@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -50,8 +50,10 @@ export async function getCoachById(coachId: string) {
        profiles:profiles!coaches_id_fkey ( full_name, avatar_url, phone )`
     )
     .eq("id", coachId)
+    .eq("is_verified", true)
     .single();
 
   if (error) throw new Error(error.message);
   return data;
 }
+

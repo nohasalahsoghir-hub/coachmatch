@@ -1,37 +1,5 @@
 import Link from "next/link";
-import { LogOut } from "lucide-react";
-import { logout } from "@/app/auth/actions";
-import { createClient } from "@/lib/supabase/server";
-
-export async function Header() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  return (
-    <header className="sticky top-0 z-40 border-b border-neutral-800 bg-neutral-950/90 backdrop-blur">
-      <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-        <Link href="/" className="text-lg font-extrabold text-emerald-400">
-          CoachMatch
-        </Link>
-
-        {user ? (
-          <form action={logout}>
-            <button
-              type="submit"
-              className="flex items-center gap-1 text-sm text-neutral-400 hover:text-white"
-            >
-              <LogOut size={16} />
-              خروج
-            </button>
-          </form>
-        ) : (
-          <Link href="/auth/login" className="text-sm text-emerald-400">
-            تسجيل الدخول
-          </Link>
-        )}
-      </div>
-    </header>
-  );
-}
+import {LogOut,Dumbbell,FlaskConical} from "lucide-react";
+import {logout} from "@/app/auth/actions";
+import {createClient} from "@/lib/supabase/server";
+export async function Header(){const s=await createClient();const {data:{user}}=await s.auth.getUser();return <header className="sticky top-0 z-40 border-b border-neutral-800 bg-neutral-950/90 backdrop-blur"><div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3"><Link href="/" className="flex items-center gap-2 text-lg font-extrabold text-emerald-400"><Dumbbell size={19}/>CoachMatch</Link><nav className="hidden items-center gap-5 text-xs text-neutral-400 md:flex"><Link href="/coaches">المدربين</Link><Link href="/demo" className="flex items-center gap-1"><FlaskConical size={13}/> العرض التجريبي</Link>{user&&<Link href="/dashboard">لوحة التحكم</Link>}</nav>{user?<form action={logout}><button className="flex items-center gap-1 text-sm text-neutral-400"><LogOut size={16}/>خروج</button></form>:<Link href="/auth/login" className="text-sm font-semibold text-emerald-400">تسجيل الدخول</Link>}</div></header>}

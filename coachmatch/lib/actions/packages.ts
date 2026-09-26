@@ -1,31 +1,37 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { calculatePackagePurchase, PACKAGE_VALID_DAYS } from "@/lib/pricing";
+import {
+  calculatePackagePurchase,
+  PACKAGE_VALID_DAYS,
+} from "@/lib/pricing";
 
-/**
- * Athlete buys an 8-session package from a coach.
- * Commission is taken up-front on the full package price.
- * (Actual payment capture — InstaPay/card — happens before this is called;
- * this records the purchase once payment is confirmed.)
- */
 export async function purchasePackage(coachId: string) {
   const supabase = await createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   if (!user) throw new Error("لازم تسجل دخول أولاً");
 
   const { data: coach, error: coachError } = await supabase
     .from("coaches")
-    .select("package_8_rate")
+    .select("id, package_8_rate, is_verified")
     .eq("id", coachId)
     .single();
-  if (coachError || !coach) throw new Error("المدرب غير موجود");
+
+  if (coachError || !coach) {
+    throw new Error("المدرب غير موجود");
+  }
+
+  if (!coach.is_verified) {
+    throw new Error("لا يمكن شراء باقة من مدرب غير موثّق");
+  }
 
   const pricing = calculatePackagePurchase(coach.package_8_rate);
+
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + PACKAGE_VALID_DAYS);
 
@@ -46,23 +52,37 @@ export async function purchasePackage(coachId: string) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/dashboard");
+
   return data;
 }
 
-/** Coach flips their own "available today" switch. */
-export async function toggleAvailability(currentValue: boolean) {
+export async function toggleAvailability(_currentValue: boolean) {
   const supabase = await createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   if (!user) throw new Error("لازم تسجل دخول أولاً");
+
+  const { data: coach, error: coachError } = await supabase
+    .from("coaches")
+    .select("is_available_today")
+    .eq("id", user.id)
+    .single();
+
+  if (coachError || !coach) {
+    throw new Error("حساب المدرب غير موجود");
+  }
 
   const { error } = await supabase
     .from("coaches")
-    .update({ is_available_today: !currentValue })
+    .update({
+      is_available_today: !coach.is_available_today,
+    })
     .eq("id", user.id);
 
   if (error) throw new Error(error.message);
+
   revalidatePath("/coach/dashboard");
 }

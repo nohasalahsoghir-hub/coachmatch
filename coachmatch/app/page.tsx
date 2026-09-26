@@ -1,37 +1,4 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-
-export default async function HomePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    redirect(profile?.role === "coach" ? "/coach/dashboard" : "/dashboard");
-  }
-
-  return (
-    <div className="flex flex-col items-center justify-center gap-6 py-20 text-center">
-      <h1 className="text-3xl font-extrabold text-emerald-400">CoachMatch</h1>
-      <p className="max-w-xs text-neutral-400">
-        احجز مدرب رياضي موثوق في الجيم، السباحة، أو الفنون القتالية — بضغطة واحدة
-      </p>
-      <div className="flex gap-3">
-        <Link href="/auth/sign-up" className="rounded-lg bg-emerald-600 px-6 py-2.5 font-semibold">
-          ابدأ الآن
-        </Link>
-        <Link href="/auth/login" className="rounded-lg border border-neutral-700 px-6 py-2.5">
-          تسجيل الدخول
-        </Link>
-      </div>
-    </div>
-  );
-}
+import Link from "next/link";import {redirect} from "next/navigation";import {Search,ShieldCheck,CalendarCheck2,CreditCard,Sparkles} from "lucide-react";import {createClient} from "@/lib/supabase/server";import {getDemoSports,getVerifiedCoaches} from "@/lib/demo";import {DemoBanner} from "@/components/demo/DemoBanner";
+export default async function HomePage(){const s=await createClient();const {data:{user}}=await s.auth.getUser();if(user){const {data:p}=await s.from("profiles").select("role").eq("id",user.id).maybeSingle();redirect(p?.role==="coach"?"/coach/dashboard":"/dashboard");}const [coaches,sports]=await Promise.all([getVerifiedCoaches(),getDemoSports()]);return <div className="space-y-7"><DemoBanner/><section className="rounded-3xl border border-neutral-800 bg-gradient-to-br from-emerald-950 via-neutral-950 to-neutral-900 p-6"><span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-300"><Sparkles size={14}/>منصة رياضية متكاملة</span><h1 className="mt-3 max-w-2xl text-4xl font-extrabold leading-tight">اختار المدرب المناسب، احجز، ادفع، وتابع رحلتك من مكان واحد.</h1><p className="mt-4 max-w-2xl text-sm leading-7 text-neutral-400">CoachMatch ينظم رحلة التدريب من اكتشاف المدرب إلى الحجز والدفع وإدارة الباقات والتقييم.</p><div className="mt-6 flex flex-wrap gap-3"><Link href="/demo" className="rounded-xl bg-emerald-600 px-5 py-3 font-bold">ابدأ الجولة التجريبية</Link><Link href="/coaches" className="rounded-xl border border-neutral-700 px-5 py-3 font-semibold">اكتشف المدربين</Link></div></section><section className="grid grid-cols-3 gap-3"><Stat v={coaches.length} l="مدرب ظاهر"/><Stat v={sports.length} l="رياضة"/><Stat v="Demo" l="بيانات آمنة"/></section><section className="grid gap-3 md:grid-cols-2"><Feature icon={Search} t="اكتشاف ذكي" b="فلترة حسب الرياضة والمكان والسعر."/><Feature icon={CalendarCheck2} t="حجز منظم" b="موعد ومكان وحالة للحجز."/><Feature icon={CreditCard} t="دفع وباقات" b="جلسة أو باقة مع رسوم وحركة مالية."/><Feature icon={ShieldCheck} t="ثقة وأمان" b="توثيق وتقييمات ونزاعات."/></section></div>}
+function Stat({v,l}:{v:string|number;l:string}){return <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 text-center"><div className="text-2xl font-extrabold text-emerald-400">{v}</div><div className="mt-1 text-xs text-neutral-500">{l}</div></div>}
+function Feature({icon:Icon,t,b}:{icon:any;t:string;b:string}){return <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4"><Icon size={20} className="text-emerald-400"/><h3 className="mt-3 font-bold">{t}</h3><p className="mt-1 text-sm leading-6 text-neutral-400">{b}</p></div>}
