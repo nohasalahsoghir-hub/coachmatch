@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #07110e;
+  --surface: #0b1713;
+  --surface-2: #10201a;
+  --surface-3: #15261f;
+  --line: #20352c;
+  --text: #f3f7f4;
+  --muted: #a9b9b1;
+  --muted-2: #7f948b;
+  --brand: #34d399;
+  --danger: #fb7185;
+  --warning: #fbbf24;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 95% 0%, rgba(52,211,153,.10), transparent 27rem),
+    radial-gradient(circle at 5% 10%, rgba(16,185,129,.06), transparent 22rem),
+    var(--bg);
+  color: var(--text);
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: rgba(52,211,153,.24); color: #fff; }
+button, a, input, select { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+input::placeholder { color: #748a81; }
+
+@layer components {
+  .surface { @apply rounded-3xl border border-white/10 bg-[#0b1713]; }
+  .surface-soft { @apply rounded-3xl border border-white/8 bg-[#0a1511]; }
+  .field { @apply min-h-12 rounded-xl border border-white/10 bg-[#07110e] px-3 text-sm text-white outline-none transition focus:border-emerald-400/50; }
+}
