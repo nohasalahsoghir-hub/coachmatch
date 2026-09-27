@@ -1,39 +1,5 @@
 "use client";
-
 import { useState, useTransition } from "react";
-import { CheckCircle2, CircleOff } from "lucide-react";
+import { CalendarCheck2 } from "lucide-react";
 import { setCoachAvailability } from "@/lib/actions/coach";
-
-export function AvailabilityToggle({ initial }: { initial: boolean }) {
-  const [available, setAvailable] = useState(initial);
-  const [pending, startTransition] = useTransition();
-
-  const toggle = () => {
-    const next = !available;
-    setAvailable(next);
-    startTransition(async () => {
-      try {
-        await setCoachAvailability(next);
-      } catch {
-        setAvailable(!next);
-      }
-    });
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      disabled={pending}
-      aria-pressed={available}
-      className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 text-xs font-extrabold transition disabled:opacity-60 ${
-        available
-          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-          : "border-neutral-700 bg-neutral-950 text-neutral-500"
-      }`}
-    >
-      {available ? <CheckCircle2 size={15} /> : <CircleOff size={15} />}
-      {available ? "متاح اليوم" : "غير متاح اليوم"}
-    </button>
-  );
-}
+export function AvailabilityToggle({initial}:{initial:boolean}){const [active,setActive]=useState(initial);const[busy,start]=useTransition();const toggle=()=>start(async()=>{const next=await setCoachAvailability(!active);setActive(next)});return <button type="button" disabled={busy} onClick={toggle} className={`inline-flex min-h-12 items-center gap-2 rounded-2xl px-4 text-xs font-black ${active?"bg-emerald-400 text-[#052117]":"border border-white/10 bg-white/5 text-[#a9b9b2]"}`}><CalendarCheck2 size={16}/>{busy?"جاري التحديث...":active?"استقبال الحجوزات مفعّل":"استقبال الحجوزات متوقف"}</button>}

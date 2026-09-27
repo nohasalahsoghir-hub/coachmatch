@@ -1,20 +1,3 @@
 "use client";
-
-import { useTransition } from "react";
-import { CheckCircle2 } from "lucide-react";
-import { confirmAttendance } from "@/lib/actions/bookings";
-
-export function ConfirmAttendanceButton({ bookingId }: { bookingId: string }) {
-  const [pending, startTransition] = useTransition();
-
-  return (
-    <button
-      onClick={() => startTransition(() => confirmAttendance(bookingId))}
-      disabled={pending}
-      className="flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
-    >
-      <CheckCircle2 size={14} />
-      {pending ? "..." : "تأكيد الحضور"}
-    </button>
-  );
-}
+import { useState,useTransition } from "react";import { CheckCircle2 } from "lucide-react";import { completeBooking } from "@/lib/actions/bookings";
+export function ConfirmAttendanceButton({bookingId}:{bookingId:string}){const[pending,start]=useTransition();const[error,setError]=useState("");return <div className="flex flex-col items-end gap-1">{error&&<span role="alert" className="text-[11px] text-rose-300">{error}</span>}<button type="button" onClick={()=>{if(!confirm("تأكدي أن الجلسة انتهت بالفعل قبل تسجيل اكتمالها."))return;setError("");start(async()=>{try{await completeBooking(bookingId)}catch(e){setError(e instanceof Error?e.message:"تعذر تسجيل اكتمال الجلسة")}})}} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-emerald-400 px-3 text-xs font-black text-[#052117] disabled:opacity-50"><CheckCircle2 size={14}/>{pending?"جارٍ الحفظ...":"تسجيل اكتمال الجلسة"}</button></div>}

@@ -1,21 +1,7 @@
 "use server";
-
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+export async function setCoachAvailability(next:boolean){const s=await createClient();const{data:{user}}=await s.auth.getUser();if(!user)throw new Error("لازم تسجل دخول");const{data:p}=await s.from("profiles").select("role").eq("id",user.id).maybeSingle();if(p?.role!=="coach")throw new Error("مش مسموح");const{error}=await s.from("coaches").update({is_available_today:next}).eq("id",user.id);if(error)throw new Error(error.message);revalidatePath("/coach/dashboard");revalidatePath("/coaches");return next;}
+export async function updateCoachProfile(input:{headline:string;bio:string;sessionRate:number;packageRate:number;locations:string[];languages:string[]}){const s=await createClient();const{data:{user}}=await s.auth.getUser();if(!user)throw new Error("لازم تسجل دخول");const{data:p}=await s.from("profiles").select("role").eq("id",user.id).maybeSingle();if(p?.role!=="coach")throw new Error("مش مسموح");if(!input.headline.trim()||!input.bio.trim())throw new Error("اكتبي عنوان ونبذة واضحة");if(!Number.isFinite(input.sessionRate)||input.sessionRate<=0)throw new Error("سعر الجلسة غير صحيح");if(!Number.isFinite(input.packageRate)||input.packageRate<=0)throw new Error("سعر الباقة غير صحيح");const{error}=await s.from("coaches").update({headline:input.headline.trim(),bio:input.bio.trim(),session_rate:Math.round(input.sessionRate*100)/100,package_8_rate:Math.round(input.packageRate*100)/100,training_locations:input.locations.filter(Boolean).slice(0,8),languages:input.languages.filter(Boolean).slice(0,6)}).eq("id",user.id);if(error)throw new Error(error.message);revalidatePath("/coach/profile");revalidatePath("/coach/dashboard");revalidatePath("/coaches");revalidatePath(`/coaches/${user.id}`);return{ok:true};}
 
-export async function setCoachAvailability(isAvailable: boolean) {
-  const supabase = await createClient();
-  const { data: authData } = await supabase.auth.getUser();
-  const user = authData.user;
-  if (!user) throw new Error("لازم تسجل دخول أولًا");
-
-  const { error } = await supabase
-    .from("coaches")
-    .update({ is_available_today: isAvailable })
-    .eq("id", user.id);
-
-  if (error) throw new Error(error.message);
-
-  revalidatePath("/coach/dashboard");
-  revalidatePath("/coaches");
-}
+export async function submitCoachVerification(){const s=await createClient();const{data:{user}}=await s.auth.getUser();if(!user)throw new Error("لازم تسجل دخول");const{data:p}=await s.from("profiles").select("role").eq("id",user.id).maybeSingle();if(p?.role!=="coach")throw new Error("مش مسموح");const{data:c}=await s.from("coaches").select("is_verified").eq("id",user.id).maybeSingle();if(c?.is_verified)throw new Error("الحساب موثّق بالفعل");const{data:existing}=await s.from("coach_verification_requests").select("id,status").eq("coach_id",user.id).in("status",["pending","needs_changes"]).limit(1);if(existing?.length)throw new Error("عندك طلب توثيق مفتوح بالفعل");const{error}=await s.from("coach_verification_requests").insert({coach_id:user.id,status:"pending",submitted_at:new Date().toISOString(),documents:{self_attested:true,source:"coach_profile"},is_demo:false});if(error)throw new Error(error.message);revalidatePath("/coach/profile");revalidatePath("/admin");return{ok:true};}

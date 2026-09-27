@@ -1,5 +1,3 @@
 "use server";
-
-export async function purchasePackage() {
-  throw new Error("الدفع الحقيقي للباقة غير مفعّل في النسخة المنشورة بعد. استخدمي العرض التجريبي لرؤية رحلة الدفع كاملة.");
-}
+import { revalidatePath } from "next/cache";import { createClient } from "@/lib/supabase/server";
+export async function purchasePackage(coachId:string,idempotencyKey:string){const s=await createClient();const{data:{user}}=await s.auth.getUser();if(!user)throw new Error("لازم تسجل دخول أولًا");const{data,error}=await s.rpc("capture_package_purchase_test",{p_coach_id:coachId,p_idempotency_key:idempotencyKey});if(error)throw new Error(error.message);const row=Array.isArray(data)?data[0]:data;if(!row?.package_id)throw new Error("تعذر تفعيل الباقة");revalidatePath("/dashboard");revalidatePath(`/coaches/${coachId}`);return row;}
