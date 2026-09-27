@@ -1,12 +1,13 @@
 {
   "name": "coachmatch",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "node scripts/seed-real-product.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
