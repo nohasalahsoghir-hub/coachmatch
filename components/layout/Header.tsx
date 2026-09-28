@@ -8,32 +8,32 @@ export async function Header() {
   const { data: profile } = user
     ? await s.from("profiles").select("role").eq("id", user.id).maybeSingle()
     : { data: null };
-  const home =
-    profile?.role === "coach" ? "/coach/dashboard"
-    : profile?.role === "admin" ? "/admin"
-    : "/dashboard";
+  const home = profile?.role === "coach" ? "/coach/dashboard" : "/dashboard";
 
   return (
-    <header className="sticky top-0 z-40 border-b backdrop-blur-xl"
-      style={{ borderColor: "var(--line-soft)", background: "rgba(4,11,9,0.85)" }}>
-      <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-3 px-4 sm:px-6 lg:px-8">
-
-        {/* Logo */}
+    <header
+      className="sticky top-0 z-40 border-b backdrop-blur-xl"
+      style={{ borderColor: "var(--line-soft)", background: "rgba(4,11,9,0.85)" }}
+    >
+      <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex shrink-0 items-center gap-2.5 font-black tracking-tight" id="header-logo">
           <span
             className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-black transition-transform hover:scale-105"
-            style={{ background: "var(--cobalt)", color: "#F7F9FF" }}>
+            style={{ background: "var(--cobalt)", color: "#F7F9FF" }}
+          >
             <Zap size={16} fill="currentColor" />
           </span>
-          <span className="font-display text-base font-bold" style={{ fontFamily: "var(--font-changa)" }}>
+          <span className="font-display text-base font-bold">
             Coach<span style={{ color: "var(--cobalt)" }}>Match</span>
           </span>
         </Link>
 
-        {/* Search bar — desktop */}
         <div className="hidden flex-1 md:block">
-          <form action="/coaches" className="mx-auto flex max-w-sm items-center gap-2 rounded-2xl border px-3 transition-all focus-within:border-[var(--cobalt)]"
-            style={{ borderColor: "var(--line)", background: "var(--surface-3)" }}>
+          <form
+            action="/coaches"
+            className="mx-auto flex max-w-sm items-center gap-2 rounded-2xl border px-3 transition-all focus-within:border-[var(--cobalt)]"
+            style={{ borderColor: "var(--line)", background: "var(--surface-3)" }}
+          >
             <Search size={14} style={{ color: "var(--muted-2)" }} />
             <input
               name="q"
@@ -45,8 +45,7 @@ export async function Header() {
           </form>
         </div>
 
-        {/* Nav */}
-        <nav className="mr-auto flex items-center gap-1 text-sm font-bold">
+        <nav className="mr-auto flex items-center gap-2 text-sm font-bold">
           <Link
             className="hidden rounded-xl px-3 py-2 transition-colors sm:block"
             style={{ color: "var(--muted)" }}
@@ -57,15 +56,9 @@ export async function Header() {
           </Link>
 
           {user ? (
-            <Link
-              className="btn-cobalt min-h-10 text-sm"
-              href={home}
-              id="nav-dashboard"
-            >
+            <Link className="btn-cobalt min-h-10 text-sm" href={home} id="nav-dashboard">
               <UserRound size={14} />
-              {profile?.role === "admin" ? "الإدارة"
-               : profile?.role === "coach" ? "لوحة المدرب"
-               : "حسابي"}
+              {profile?.role === "coach" ? "لوحة المدرب" : "حسابي"}
             </Link>
           ) : (
             <>
