@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createServiceClient } from "@/lib/supabase/service";
 import { checkPwnedPassword } from "@/lib/security/pwned-password";
 
 type ActionState = { error: string | null };
@@ -12,7 +12,7 @@ const STRONG_PASSWORD_REGEX = /^(?=.*\d).{8,}$/;
 
 async function lookupEmailKind(email: string): Promise<"exists" | "missing" | "unknown"> {
   try {
-    const admin = createAdminClient();
+    const admin = createServiceClient();
     const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
     if (error) return "unknown";
     return data.users.some((u: any) => String(u.email ?? "").toLowerCase() === email.toLowerCase()) ? "exists" : "missing";
@@ -54,7 +54,7 @@ export async function signUp(_prevState: ActionState, formData: FormData): Promi
   if (!data.user) return { error: "تعذر إنشاء الحساب" };
 
   if (role === "coach") {
-    const admin = createAdminClient();
+    const admin = createServiceClient();
     const { error: coachError } = await admin.from("coaches").upsert({ id: data.user.id }, { onConflict: "id" });
     if (coachError) return { error: "تم إنشاء الحساب لكن تعذر تجهيز ملف المدرب." };
   }
@@ -89,7 +89,6 @@ export async function login(_prevState: ActionState, formData: FormData): Promis
   const { data: profile } = await s.from("profiles").select("role").eq("id", user.id).maybeSingle();
   revalidatePath("/", "layout");
 
-  if (profile?.role === "admin") redirect("/admin");
   if (profile?.role === "coach") redirect("/coach/dashboard");
   redirect("/dashboard");
 }
