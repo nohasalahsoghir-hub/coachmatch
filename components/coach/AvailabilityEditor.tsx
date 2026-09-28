@@ -20,14 +20,14 @@ export function AvailabilityEditor({initial}:{initial:Block[]}){
     try{await saveCoachAvailability(blocks);setOk(true);}
     catch(e){setError(e instanceof Error?e.message:"تعذر حفظ الجدول");}
   });
-  return <div className="rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-5 space-y-4">
-    <div><p className="font-black">الجدول الأسبوعي</p><p className="mt-1 text-xs text-[var(--muted-2)]">أضيفي فترة أو أكثر لكل يوم. المواعيد العامة تُحسب تلقائيًا من هنا.</p></div>
-    <div className="space-y-3">
+  return <div className="rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-5 space-y-6">
+    <div><p className="font-black">الجدول الأسبوعي</p><p className="mt-2 text-xs leading-6 text-[var(--muted-2)]">أضيفي فترة أو أكثر لكل يوم. المواعيد العامة تُحسب تلقائيًا من هنا.</p></div>
+    <div className="space-y-4">
       {DAYS.map((label,day)=>{
         const dayBlocks=blocks.map((b,i)=>({b,i})).filter(x=>x.b.day===day);
-        return <section key={day} className="rounded-2xl bg-[var(--surface-2)] p-4">
+        return <section key={day} className="rounded-2xl bg-[var(--surface-2)] p-5">
           <div className="flex items-center justify-between"><h3 className="font-bold">{label}</h3><button type="button" disabled={busy||dayBlocks.length>=8} onClick={()=>add(day)} className="inline-flex min-h-10 items-center gap-1 rounded-xl border border-cobalt-500/20 px-3 text-xs font-black text-cobalt-300"><Plus size={14}/>إضافة فترة</button></div>
-          {dayBlocks.length===0?<p className="mt-3 text-xs text-[var(--muted-2)]">لا توجد مواعيد.</p>:<div className="mt-3 space-y-2">{dayBlocks.map(({b,i})=><div key={i} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]"><label className="text-[10px] text-[var(--muted-2)]">من<input type="time" value={b.start_time.slice(0,5)} onChange={e=>update(i,{start_time:e.target.value})} className="field mt-1" /></label><label className="text-[10px] text-[var(--muted-2)]">إلى<input type="time" value={b.end_time.slice(0,5)} onChange={e=>update(i,{end_time:e.target.value})} className="field mt-1" /></label><button type="button" disabled={busy} onClick={()=>remove(i)} aria-label={`حذف فترة ${label}`} className="self-end inline-flex min-h-11 items-center justify-center rounded-xl border border-rose-500/20 px-3 text-rose-200"><Trash2 size={15}/></button></div>)}</div>}
+          {dayBlocks.length===0?<p className="mt-3 text-xs text-[var(--muted-2)]">لا توجد مواعيد.</p>:<div className="mt-4 space-y-3">{dayBlocks.map(({b,i})=><div key={i} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]"><label className="text-[10px] text-[var(--muted-2)]">من<input type="time" value={b.start_time.slice(0,5)} onChange={e=>update(i,{start_time:e.target.value})} className="field mt-2" /></label><label className="text-[10px] text-[var(--muted-2)]">إلى<input type="time" value={b.end_time.slice(0,5)} onChange={e=>update(i,{end_time:e.target.value})} className="field mt-1" /></label><button type="button" disabled={busy} onClick={()=>remove(i)} aria-label={`حذف فترة ${label}`} className="self-end inline-flex min-h-11 items-center justify-center rounded-xl border border-rose-500/20 px-3 text-rose-200"><Trash2 size={15}/></button></div>)}</div>}
         </section>;
       })}
     </div>
