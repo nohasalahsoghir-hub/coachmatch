@@ -2,44 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ───────────────────────────────────────────────
-   DESIGN TOKENS
-─────────────────────────────────────────────── */
+/* CoachMatch design tokens: charcoal + cobalt. */
 :root {
-  /* Neutral app scale: functional names, not sport metaphors. */
-  --ink-950: #0D1512;
-  --ink-900: #1A2821;
-  --ink-800: #223229;
-  --ink-700: #2B3D32;
-  --ink-600: #34483B;
-  --ink-500: #405447;
-  --ink-400: #4D6254;
+  --charcoal-950: #15181C;
+  --charcoal-900: #1C2025;
+  --charcoal-800: #262B31;
+  --charcoal-700: #343A42;
+  --charcoal-600: #48505A;
+  --charcoal-500: #606873;
+  --charcoal-400: #7A828B;
+  --charcoal-300: #A2A7AE;
+  --charcoal-200: #C9CDD2;
+  --charcoal-100: #E9EBEE;
+  --charcoal-50:  #F5F6F7;
 
-  --bg:        var(--ink-950);
-  --surface:   var(--ink-800);
-  --surface-2: var(--ink-700);
-  --surface-3: var(--ink-600);
-  --line:      var(--ink-500);
-  --line-soft: rgba(77,98,84,.55);
-  --text:      #E8F0EA;
-  --muted:     #A7B7AE;
-  --muted-2:   #74877D;
+  --bg:        var(--charcoal-950);
+  --surface:   var(--charcoal-800);
+  --surface-2: var(--charcoal-700);
+  --surface-3: var(--charcoal-600);
+  --line:      var(--charcoal-500);
+  --line-soft: rgba(96,104,115,.55);
+  --text:      var(--charcoal-100);
+  --muted:     #B0B5BC;
+  --muted-2:   #8B929A;
 
-  /* Brand / action */
-  --flare:     #FF6A3D;
-  --flare-glow: rgba(255,106,61,.22);
+  --cobalt:      #3E6FF2;
+  --cobalt-glow: rgba(62,111,242,.22);
 
-  /* Sport families — never substitute for --flare actions. */
-  --combat:    #F05A28;
-  --combat-bg: rgba(240,90,40,.10);
-  --water:     #2E9FC7;
-  --water-bg:  rgba(46,159,199,.10);
+  --combat:    #E0483F;
+  --combat-bg: rgba(224,72,63,.10);
+  --water:     #14B8A6;
+  --water-bg:  rgba(20,184,166,.10);
   --fit:       #E8A33D;
   --fit-bg:    rgba(232,163,61,.10);
-  --racquet:   #00A6A6;
-  --racquet-bg:rgba(0,166,166,.10);
-  --team:      #7B5CF6;
-  --team-bg:   rgba(123,92,246,.10);
+  --racquet:   #8B5CF6;
+  --racquet-bg:rgba(139,92,246,.10);
+  --team:      #E0609C;
+  --team-bg:   rgba(224,96,156,.10);
 
   color-scheme: dark;
 }
@@ -50,64 +49,65 @@ html { scroll-behavior: smooth; }
 body {
   margin: 0;
   background: var(--bg);
-  /* Single atmospheric treatment: body gradients. */
   background-image:
-    radial-gradient(ellipse 100% 50% at 50% -5%, rgba(255,106,61,.12), transparent),
-    radial-gradient(circle at 90% 85%, rgba(46,159,199,.06), transparent 40%),
-    radial-gradient(circle at 5% 20%, rgba(123,92,246,.04), transparent 35%);
+    radial-gradient(ellipse 100% 50% at 50% -5%, rgba(62,111,242,.10), transparent),
+    radial-gradient(circle at 90% 85%, rgba(20,184,166,.05), transparent 40%),
+    radial-gradient(circle at 5% 20%, rgba(139,92,246,.035), transparent 35%);
   color: var(--text);
   font-family: var(--font-cairo);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
-::selection { background: rgba(255,106,61,.30); color: #fff; }
+::selection { background: rgba(62,111,242,.30); color: #fff; }
 button, a, input, select { -webkit-tap-highlight-color: transparent; }
-:focus-visible { outline: 2px solid var(--flare); outline-offset: 3px; border-radius: 6px; }
+:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 3px; border-radius: 6px; }
 
 .font-display { font-family: var(--font-changa); }
 .tabular { font-variant-numeric: tabular-nums; }
 
 @layer components {
-  /* Flat surfaces are the primary card pattern. */
   .surface {
     @apply rounded-3xl border bg-[var(--surface)];
     border-color: var(--line);
   }
+
   .surface-raised {
     @apply rounded-3xl bg-[var(--surface-2)];
     border: 1px solid var(--line);
     box-shadow: 0 1px 3px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.03);
   }
 
-  /* Glass is reserved for floating overlays/modals, not regular cards. */
+  /* Glass is reserved for floating overlays/modals. */
   .glass {
     @apply rounded-3xl;
-    background: rgba(34,50,41,.82);
+    background: rgba(38,43,49,.92);
     border: 1px solid rgba(255,255,255,.08);
     backdrop-filter: blur(16px);
   }
 
   .field {
-    @apply min-h-12 rounded-2xl border px-4 text-sm text-white outline-none transition-all duration-200;
+    @apply min-h-12 rounded-2xl border px-4 text-sm outline-none transition-all duration-200;
     background: var(--surface-3);
     border-color: var(--line);
     color: var(--text);
   }
   .field::placeholder { color: var(--muted-2); }
-  .field:focus { border-color: var(--flare); box-shadow: 0 0 0 3px rgba(255,106,61,.12); }
+  .field:focus { border-color: var(--cobalt); box-shadow: 0 0 0 3px rgba(62,111,242,.12); }
 
-  /* One consistent primary/ghost button rhythm. */
-  .btn-flare {
+  .btn-cobalt,
+  .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black transition-all duration-200;
-    background: var(--flare);
-    color: #1a0800;
+    background: var(--cobalt);
+    color: #F7F9FF;
   }
-  .btn-flare:hover {
+  .btn-cobalt:hover,
+  .btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(255,106,61,.35);
+    box-shadow: 0 6px 20px rgba(62,111,242,.35);
   }
-  .btn-flare:active { transform: translateY(0); }
+  .btn-cobalt:active,
+  .btn-primary:active { transform: translateY(0); }
 
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold transition-all duration-200;
@@ -115,21 +115,21 @@ button, a, input, select { -webkit-tap-highlight-color: transparent; }
     color: var(--muted);
   }
   .btn-ghost:hover {
-    border-color: var(--flare);
-    color: var(--flare);
+    border-color: var(--cobalt);
+    color: var(--cobalt);
     background: rgba(255,255,255,.04);
   }
 
-  /* All badges/pills share one spacing pair. */
   .sport-badge,
   .badge {
     @apply inline-flex items-center gap-2 rounded-full px-2 py-1 text-[11px] font-bold;
   }
-  .sport-combat  { background: var(--combat-bg);  color: #FFAA8A; }
-  .sport-water   { background: var(--water-bg);   color: #7DD3F0; }
-  .sport-fit     { background: var(--fit-bg);     color: #F5C978; }
-  .sport-racquet { background: var(--racquet-bg); color: #72D8D8; }
-  .sport-team    { background: var(--team-bg);    color: #C4B0FF; }
+
+  .sport-combat  { background: var(--combat-bg);  color: var(--combat); }
+  .sport-water   { background: var(--water-bg);   color: var(--water); }
+  .sport-fit     { background: var(--fit-bg);     color: var(--fit); }
+  .sport-racquet { background: var(--racquet-bg); color: var(--racquet); }
+  .sport-team    { background: var(--team-bg);    color: var(--team); }
 
   .card-combat  { border-right: 3px solid var(--combat); }
   .card-water   { border-right: 3px solid var(--water); }
@@ -152,10 +152,9 @@ button, a, input, select { -webkit-tap-highlight-color: transparent; }
   .stat-number {
     @apply text-2xl font-black tabular;
     font-family: var(--font-changa);
-    color: var(--flare);
+    color: var(--charcoal-100);
   }
 
-  /* Shimmer exists only on loading skeletons. */
   .skeleton {
     background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
     background-size: 800px 100%;
@@ -166,7 +165,7 @@ button, a, input, select { -webkit-tap-highlight-color: transparent; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: var(--flare); }
+::-webkit-scrollbar-thumb:hover { background: var(--cobalt); }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(10px); }
