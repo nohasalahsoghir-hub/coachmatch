@@ -53,12 +53,6 @@ export async function signUp(_prevState: ActionState, formData: FormData): Promi
   if (error) return { error: error.message };
   if (!data.user) return { error: "تعذر إنشاء الحساب" };
 
-  if (role === "coach") {
-    const admin = createServiceClient();
-    const { error: coachError } = await admin.from("coaches").upsert({ id: data.user.id }, { onConflict: "id" });
-    if (coachError) return { error: "تم إنشاء الحساب لكن تعذر تجهيز ملف المدرب." };
-  }
-
   revalidatePath("/", "layout");
 
   if (!data.session) redirect(`/auth/verify-email?email=${encodeURIComponent(email)}`);
