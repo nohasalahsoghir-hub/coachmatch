@@ -1,11 +1,9 @@
 name: CoachMatch CI
 on:
   push:
-    branches:
-      - "**"
+    branches: ["**"]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 permissions:
   contents: read
 jobs:
@@ -20,10 +18,16 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx tsc --noEmit
-      - name: Design token audit
+      - name: Legacy design audit
         shell: bash
         run: |
-          echo '=== OLD DESIGN TOKENS ==='
-          grep -RniE 'flare|pitch|ink-|#FF6A3D|#040B09' app components lib --include='*.tsx' --include='*.ts' --include='*.css' --include='*.js' --include='*.mjs' || true
-          echo '=== LEGACY RADIUS ==='
-          grep -RniE 'rounded-(4xl|5xl)' app components lib --include='*.tsx' --include='*.ts' --include='*.css' || true
+          set -euo pipefail
+          if grep -RniE 'var\(--(flare|pitch|ink)\)|btn-flare|--(flare|pitch|ink):|#FF6A3D|#040B09' app components lib --include='*.tsx' --include='*.ts' --include='*.css' --include='*.js' --include='*.mjs'; then
+            echo 'Legacy design tokens found.'
+            exit 1
+          fi
+          if grep -RniE 'rounded-(4xl|5xl)' app components lib --include='*.tsx' --include='*.ts' --include='*.css'; then
+            echo 'Legacy radius tokens found.'
+            exit 1
+          fi
+          echo 'Design audit passed.'

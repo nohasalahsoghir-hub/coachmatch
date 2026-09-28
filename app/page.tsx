@@ -1,2 +1,31 @@
-import Link from "next/link";import { Filter, ShieldCheck, Sparkles } from "lucide-react";import { CoachCard } from "@/components/athlete/CoachCard";import { CoachFilters } from "@/components/athlete/CoachFilters";import { getCoachFilterOptions, getSports, getVerifiedCoaches } from "@/lib/marketplace";import { EmptyState } from "@/components/shared/EmptyState";
-export default async function CoachesPage({searchParams}:{searchParams:Promise<Record<string,string|undefined>>}){const p=await searchParams;const filters={q:p.q,sport:p.sport,location:p.location,maxRate:p.maxRate?Number(p.maxRate):undefined,available:p.available==="true"};const [coaches,options,sports]=await Promise.all([getVerifiedCoaches(filters),getCoachFilterOptions(),getSports()]);return <div className="space-y-7"><section><div className="flex flex-wrap items-end justify-between gap-4"><div><div className="inline-flex items-center gap-2 text-xs font-bold text-cobalt-300"><Sparkles size={14}/>اكتشفي مدربك</div><h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">مدربين حقيقيين، مواعيد واضحة، وحجز منظم.</h1><p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--muted)]">قارني حسب الرياضة والمكان والسعر والتوفر، وبعدها ادخلي على ملف المدرب واحجزي الموعد المناسب.</p></div><div className="flex gap-2 text-[11px]"><span className="inline-flex items-center gap-1 rounded-full bg-cobalt-500/10 px-3 py-1.5 text-cobalt-300"><ShieldCheck size={13}/>موثقون</span><span className="rounded-full bg-[rgba(255,255,255,.05)] px-3 py-1.5 text-[var(--muted)]">{sports.length} رياضة</span></div></div><div className="mt-6"><CoachFilters sports={options.sports} locations={options.locations} values={{q:p.q,sport:p.sport,location:p.location,maxRate:p.maxRate,available:p.available==="true"}}/></div></section><div className="flex items-center justify-between"><p className="text-sm font-bold">{coaches.length} نتيجة</p><Link href="/auth/sign-up" className="text-xs font-bold text-cobalt-300">عايزة تبقي مدربة؟</Link></div>{coaches.length?<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{coaches.map((c:any)=><CoachCard key={c.id} id={c.id} name={c.full_name??"مدرب"} avatarUrl={c.avatar_url} headline={c.headline} sports={c.sports??[]} sessionRate={Number(c.session_rate)} locations={c.training_locations??[]} rating={Number(c.rating)} totalReviews={Number(c.total_reviews)} availableToday={Boolean(c.is_available_today)} experienceYears={Number(c.experience_years??0)}/>)}</div>:<EmptyState title="مش لقينا نتائج" text="جربي رياضة أو منطقة أو سعر مختلف، أو امسحي الفلاتر عشان تشوفي الكل." href="/coaches" label="عرض كل المدربين"/>}</div>}
+import Link from "next/link";
+import { ArrowLeft,CalendarCheck2,ShieldCheck,Users } from "lucide-react";
+
+export default function HomePage(){
+  return <main className="space-y-8">
+    <section className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-[var(--surface)] p-7 sm:p-10">
+      <div className="max-w-3xl">
+        <p className="text-xs font-bold text-cobalt-300">CoachMatch</p>
+        <h1 className="mt-3 text-4xl font-black leading-tight sm:text-6xl">اختاري مدربك الرياضي واحجزي الموعد المناسب.</h1>
+        <p className="mt-4 max-w-2xl text-sm leading-8 text-[var(--muted)]">اكتشفي مدربين موثّقين، قارني حسب الرياضة والمكان والسعر، وشوفي المواعيد المتاحة فعليًا قبل تأكيد الحجز.</p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/coaches" className="btn-cobalt min-h-12 px-5">اكتشفي المدربين <ArrowLeft size={15}/></Link>
+          <Link href="/auth/sign-up" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[var(--line)] px-5 text-sm font-bold text-[var(--muted)]">إنشاء حساب</Link>
+        </div>
+      </div>
+    </section>
+    <section className="grid gap-3 sm:grid-cols-3">
+      <Feature icon={Users} title="مدربون موثّقون" text="ملفات عامة واضحة ومعلومات تدريب أساسية."/>
+      <Feature icon={CalendarCheck2} title="مواعيد حقيقية" text="اختيار من جدول المدرب والمواعيد المتاحة فعليًا."/>
+      <Feature icon={ShieldCheck} title="حجز منظم" text="حماية من التعارض والضغط المكرر وتأكيد واضح."/>
+    </section>
+  </main>;
+}
+
+function Feature({icon:Icon,title,text}:{icon:any;title:string;text:string}){
+  return <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5">
+    <Icon size={18} className="text-cobalt-300"/>
+    <h2 className="mt-3 font-black">{title}</h2>
+    <p className="mt-1 text-xs leading-6 text-[var(--muted-2)]">{text}</p>
+  </div>;
+}
