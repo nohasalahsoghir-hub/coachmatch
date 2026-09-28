@@ -6,6 +6,8 @@ on:
   pull_request:
     branches:
       - main
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,8 +15,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run build
       - run: npx tsc --noEmit
+      - name: Design token audit
+        shell: bash
+        run: |
+          echo '=== OLD DESIGN TOKENS ==='
+          grep -RniE 'flare|pitch|ink-|#FF6A3D|#040B09' app components lib --include='*.tsx' --include='*.ts' --include='*.css' --include='*.js' --include='*.mjs' || true
+          echo '=== LEGACY RADIUS ==='
+          grep -RniE 'rounded-(4xl|5xl)' app components lib --include='*.tsx' --include='*.ts' --include='*.css' || true
