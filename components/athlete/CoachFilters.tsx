@@ -34,7 +34,7 @@ export function CoachFilters({
           <option value="350">حتى 350 ج.م</option>
           <option value="500">حتى 500 ج.م</option>
         </select>
-        <button className="btn-flare min-h-12">بحث</button>
+        <button className="btn-cobalt min-h-12">بحث</button>
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-[var(--muted)]">
@@ -44,11 +44,11 @@ export function CoachFilters({
             name="available"
             value="true"
             defaultChecked={Boolean(values?.available)}
-            className="accent-[var(--flare)]"
+            className="accent-[var(--cobalt)]"
           />
           متاح اليوم
         </label>
-        <Link href="/coaches" className="mr-auto px-2 py-2 font-bold text-[var(--flare)]">
+        <Link href="/coaches" className="mr-auto px-2 py-2 font-bold text-[var(--cobalt)]">
           مسح الفلاتر
         </Link>
       </div>
