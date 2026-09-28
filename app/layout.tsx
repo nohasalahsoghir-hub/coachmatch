@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
-import { Cairo, Changa } from "next/font/google";
+import { Tajawal } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
 import "./globals.css";
 
-const cairo = Cairo({ subsets: ["arabic", "latin"], weight: ["400","500","600","700","800","900"], variable: "--font-cairo", display: "swap" });
-const changa = Changa({ subsets: ["arabic", "latin"], weight: ["600","700","800"], variable: "--font-changa", display: "swap" });
+const tajawal = Tajawal({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "700", "800"],
+  variable: "--font-tajawal",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: { default: "CoachMatch | اكتشف مدربك", template: "%s | CoachMatch" },
@@ -23,10 +27,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" className={`${cairo.variable} ${changa.variable}`}>
+    <html lang="ar" dir="rtl" className={tajawal.variable}>
       <body className="min-h-screen bg-[var(--bg)] text-[var(--text)] antialiased">
         <Header />
-        <main className="relative z-10 mx-auto min-h-[calc(100vh-72px)] max-w-6xl px-4 pb-28 pt-6 sm:px-6 lg:px-8">
+        <main className="relative z-10 mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-4 pb-24 pt-8 sm:px-6 lg:px-8">
           {children}
         </main>
         <BottomNav />
