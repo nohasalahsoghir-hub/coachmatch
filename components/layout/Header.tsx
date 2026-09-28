@@ -22,17 +22,17 @@ export async function Header() {
         <Link href="/" className="flex shrink-0 items-center gap-2.5 font-black tracking-tight" id="header-logo">
           <span
             className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-black transition-transform hover:scale-105"
-            style={{ background: "var(--flare)", color: "#1a0800" }}>
+            style={{ background: "var(--cobalt)", color: "#F7F9FF" }}>
             <Zap size={16} fill="currentColor" />
           </span>
           <span className="font-display text-base font-bold" style={{ fontFamily: "var(--font-changa)" }}>
-            Coach<span style={{ color: "var(--flare)" }}>Match</span>
+            Coach<span style={{ color: "var(--cobalt)" }}>Match</span>
           </span>
         </Link>
 
         {/* Search bar — desktop */}
         <div className="hidden flex-1 md:block">
-          <form action="/coaches" className="mx-auto flex max-w-sm items-center gap-2 rounded-2xl border px-3 transition-all focus-within:border-[var(--flare)]"
+          <form action="/coaches" className="mx-auto flex max-w-sm items-center gap-2 rounded-2xl border px-3 transition-all focus-within:border-[var(--cobalt)]"
             style={{ borderColor: "var(--line)", background: "var(--surface-3)" }}>
             <Search size={14} style={{ color: "var(--muted-2)" }} />
             <input
@@ -58,7 +58,7 @@ export async function Header() {
 
           {user ? (
             <Link
-              className="btn-flare min-h-10 text-sm"
+              className="btn-cobalt min-h-10 text-sm"
               href={home}
               id="nav-dashboard"
             >
@@ -78,7 +78,7 @@ export async function Header() {
                 إنشاء حساب
               </Link>
               <Link
-                className="inline-flex min-h-10 items-center rounded-2xl border px-4 text-sm font-bold transition-all hover:border-[var(--flare)] hover:text-[var(--flare)]"
+                className="inline-flex min-h-10 items-center rounded-2xl border px-4 text-sm font-bold transition-all hover:border-[var(--cobalt)] hover:text-[var(--cobalt)]"
                 style={{ borderColor: "var(--line)", color: "var(--muted)" }}
                 href="/auth/login"
                 id="nav-login"
