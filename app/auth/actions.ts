@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkPwnedPassword } from "@/lib/security/pwned-password";
 
 type ActionState = { error: string | null };
 const EGYPT_PHONE_REGEX = /^01[0125][0-9]{8}$/;
@@ -32,6 +33,18 @@ export async function signUp(_prevState: ActionState, formData: FormData): Promi
   if (!email || !password || !confirmPassword || !fullName || !phone) return { error: "من فضلك املأ كل البيانات المطلوبة" };
   if (!STRONG_PASSWORD_REGEX.test(password)) return { error: "كلمة المرور لازم تكون 8 أحرف على الأقل وتحتوي على رقم واحد على الأقل" };
   if (password !== confirmPassword) return { error: "كلمتا المرور غير متطابقتين" };
+  try {
+    const pwned = await checkPwnedPassword(password);
+    if (pwned.compromised) return { error: "كلمة المرور دي ظهرت في تسريبات معروفة. اختاري كلمة مرور مختلفة." };
+  } catch {
+    return { error: "تعذر التحقق من أمان كلمة المرور الآن. حاولي مرة أخرى." };
+  }
+  try {
+    const pwned = await checkPwnedPassword(password);
+    if (pwned.compromised) return { error: "كلمة المرور دي ظهرت في تسريبات معروفة. اختاري كلمة مرور مختلفة." };
+  } catch {
+    return { error: "تعذر التحقق من أمان كلمة المرور الآن. حاولي مرة أخرى." };
+  }
   if (!termsAccepted) return { error: "لازم توافق على شروط الاستخدام وسياسة الخصوصية قبل إنشاء الحساب" };
   if (!EGYPT_PHONE_REGEX.test(phone)) return { error: "رقم الهاتف غير صحيح (مثال: 01012345678)" };
   if (role !== "athlete" && role !== "coach") return { error: "نوع الحساب غير صالح" };
