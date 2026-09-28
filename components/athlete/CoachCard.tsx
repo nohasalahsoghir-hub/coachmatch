@@ -88,7 +88,7 @@ export function CoachCard({
     >
       <div
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{ background: "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(255,106,61,.06), transparent)" }}
+        style={{ background: "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(62,111,242,.06), transparent)" }}
         aria-hidden
       />
 
@@ -112,7 +112,7 @@ export function CoachCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h3 className="truncate font-bold">{name}</h3>
-              <BadgeCheck size={14} className="shrink-0 text-[var(--flare)]" />
+              <BadgeCheck size={14} className="shrink-0 text-[var(--cobalt)]" />
             </div>
             <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--muted)]">
               {headline ?? sports.join(" · ")}
@@ -152,7 +152,7 @@ export function CoachCard({
           <span className="inline-flex items-center gap-2">
             <Clock3 size={12} />
             جلسة{" "}
-            <span className="font-black tabular text-[var(--flare)]">
+            <span className="font-black tabular text-[var(--cobalt)]">
               {Number(sessionRate).toLocaleString("ar-EG")}
             </span>{" "}
             ج.م
@@ -171,7 +171,7 @@ export function CoachCard({
           <Link
             href={`/coaches/${id}`}
             id={`coach-card-cta-${id}`}
-            className="btn-flare min-h-10 text-xs"
+            className="btn-cobalt min-h-10 text-xs"
           >
             عرض الملف
             <ArrowLeft size={13} />
