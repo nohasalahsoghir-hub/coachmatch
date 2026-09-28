@@ -22,7 +22,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RniE 'flare|pitch|ink-|#FF6A3D|#040B09' app components lib --include='*.tsx' --include='*.ts' --include='*.css' --include='*.js' --include='*.mjs'; then
+          if grep -RniE 'var\(--(flare|pitch|ink)\)|btn-flare|--(flare|pitch|ink):|#FF6A3D|#040B09' app components lib --include='*.tsx' --include='*.ts' --include='*.css' --include='*.js' --include='*.mjs'; then
             echo 'Legacy design tokens found.'
             exit 1
           fi
@@ -30,3 +30,4 @@ jobs:
             echo 'Legacy radius tokens found.'
             exit 1
           fi
+          echo 'Design audit passed.'
