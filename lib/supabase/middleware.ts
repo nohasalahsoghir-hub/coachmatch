@@ -24,10 +24,9 @@ export async function updateSession(request: NextRequest) {
     const isAuthRoute = pathName.startsWith("/auth");
     const isAthleteRoute = pathName === "/dashboard" || pathName.startsWith("/dashboard/");
     const isCoachRoute = pathName === "/coach" || pathName.startsWith("/coach/");
-    const isAdminRoute = pathName === "/admin" || pathName.startsWith("/admin/");
     const isCallback = pathName === "/auth/callback";
 
-    if (!user && (isAthleteRoute || isCoachRoute || isAdminRoute)) {
+    if (!user && (isAthleteRoute || isCoachRoute)) {
       const url = request.nextUrl.clone();
       url.pathname = "/auth/login";
       return NextResponse.redirect(url);
@@ -39,15 +38,9 @@ export async function updateSession(request: NextRequest) {
 
       if (isCallback) return response;
 
-      if (isAdminRoute && role !== "admin") {
+      if (isCoachRoute && role !== "coach") {
         const url = request.nextUrl.clone();
-        url.pathname = role === "coach" ? "/coach/dashboard" : "/dashboard";
-        return NextResponse.redirect(url);
-      }
-
-      if (isCoachRoute && role !== "coach" && !isAdminRoute) {
-        const url = request.nextUrl.clone();
-        url.pathname = role === "admin" ? "/admin" : "/dashboard";
+        url.pathname = "/dashboard";
         return NextResponse.redirect(url);
       }
 
@@ -59,7 +52,7 @@ export async function updateSession(request: NextRequest) {
 
       if (isAuthRoute && !pathName.startsWith("/auth/verify-email") && !pathName.startsWith("/auth/forgot-password") && !pathName.startsWith("/auth/reset-password")) {
         const url = request.nextUrl.clone();
-        url.pathname = role === "admin" ? "/admin" : role === "coach" ? "/coach/dashboard" : "/dashboard";
+        url.pathname = role === "coach" ? "/coach/dashboard" : "/dashboard";
         return NextResponse.redirect(url);
       }
     }
