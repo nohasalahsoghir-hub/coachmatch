@@ -37,7 +37,7 @@ const CATEGORY_STYLE: Record<string, CategoryStyle> = {
   "Fitness":       { border: "var(--fit)",     bg: "var(--fit-bg)",     text: "#F5C978", label: "لياقة", icon: Dumbbell },
   "Endurance":     { border: "var(--fit)",     bg: "var(--fit-bg)",     text: "#F5C978", label: "تحمّل", icon: Dumbbell },
   "Movement":      { border: "var(--fit)",     bg: "var(--fit-bg)",     text: "#F5C978", label: "حركة",  icon: Dumbbell },
-  "Racquet Sports":{ border: "var(--racquet)", bg: "var(--racquet-bg)", text: "#72D8D8", label: "مضرب",  icon: CircleDot },
+  "Racquet Sports":{ border: "var(--racquet)", bg: "var(--racquet-bg)", text: "#7DD3FC", label: "مضرب",  icon: CircleDot },
   "Team Sports":   { border: "var(--team)",    bg: "var(--team-bg)",    text: "#C4B0FF", label: "جماعي", icon: Users },
 };
 
