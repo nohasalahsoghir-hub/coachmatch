@@ -39,12 +39,6 @@ export async function signUp(_prevState: ActionState, formData: FormData): Promi
   } catch {
     return { error: "تعذر التحقق من أمان كلمة المرور الآن. حاولي مرة أخرى." };
   }
-  try {
-    const pwned = await checkPwnedPassword(password);
-    if (pwned.compromised) return { error: "كلمة المرور دي ظهرت في تسريبات معروفة. اختاري كلمة مرور مختلفة." };
-  } catch {
-    return { error: "تعذر التحقق من أمان كلمة المرور الآن. حاولي مرة أخرى." };
-  }
   if (!termsAccepted) return { error: "لازم توافق على شروط الاستخدام وسياسة الخصوصية قبل إنشاء الحساب" };
   if (!EGYPT_PHONE_REGEX.test(phone)) return { error: "رقم الهاتف غير صحيح (مثال: 01012345678)" };
   if (role !== "athlete" && role !== "coach") return { error: "نوع الحساب غير صالح" };
@@ -116,6 +110,12 @@ export async function updatePassword(_prevState: ActionState, formData: FormData
   const confirmPassword = String(formData.get("confirm_password") ?? "");
   if (!STRONG_PASSWORD_REGEX.test(password)) return { error: "كلمة المرور لازم تكون 8 أحرف على الأقل وتحتوي على رقم واحد على الأقل" };
   if (password !== confirmPassword) return { error: "كلمتا المرور غير متطابقتين" };
+  try {
+    const pwned = await checkPwnedPassword(password);
+    if (pwned.compromised) return { error: "كلمة المرور دي ظهرت في تسريبات معروفة. اختاري كلمة مرور مختلفة." };
+  } catch {
+    return { error: "تعذر التحقق من أمان كلمة المرور الآن. حاولي مرة أخرى." };
+  }
 
   const s = await createClient();
   const { data: { user } } = await s.auth.getUser();
