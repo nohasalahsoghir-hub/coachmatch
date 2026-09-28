@@ -1,0 +1,189 @@
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Changa:wght@600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ───────────────────────────────────────────────
+   DESIGN TOKENS
+─────────────────────────────────────────────── */
+:root {
+  --bg:        #040B09;
+  --surface:   #0A1510;
+  --surface-2: #0E1C15;
+  --surface-3: #13221A;
+  --line:      #1C2B21;
+  --line-soft: #142019;
+  --text:      #E8F0EA;
+  --muted:     #8FA298;
+  --muted-2:   #607669;
+
+  /* brand */
+  --flare:     #FF6A3D;
+  --flare-glow: rgba(255,106,61,.22);
+
+  /* sport families */
+  --combat:    #E03A3A;
+  --combat-bg: rgba(224,58,58,.10);
+  --water:     #2E9FC7;
+  --water-bg:  rgba(46,159,199,.10);
+  --fit:       #FF6A3D;
+  --fit-bg:    rgba(255,106,61,.10);
+  --racquet:   #78C800;
+  --racquet-bg:rgba(120,200,0,.10);
+  --team:      #7B5CF6;
+  --team-bg:   rgba(123,92,246,.10);
+
+  color-scheme: dark;
+}
+
+/* ───────────────────────────────────────────────
+   RESET & BASE
+─────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse 100% 50% at 50% -5%,  rgba(255,106,61,.12), transparent),
+    radial-gradient(circle   at 90% 85%, rgba(46,159,199,.06), transparent 40%),
+    radial-gradient(circle   at 5%  20%, rgba(123,92,246,.04),  transparent 35%);
+  color: var(--text);
+  font-family: "Cairo", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: rgba(255,106,61,.30); color: #fff; }
+button, a, input, select { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--flare); outline-offset: 3px; border-radius: 6px; }
+
+/* ───────────────────────────────────────────────
+   TYPOGRAPHY
+─────────────────────────────────────────────── */
+.font-display { font-family: "Changa", sans-serif; }
+
+/* Scoreboard numerals — tabular */
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* ───────────────────────────────────────────────
+   COMPONENT LAYER
+─────────────────────────────────────────────── */
+@layer components {
+
+  /* Surfaces */
+  .surface {
+    @apply rounded-3xl border bg-[var(--surface)];
+    border-color: var(--line);
+  }
+  .surface-raised {
+    @apply rounded-3xl bg-[var(--surface-2)];
+    border: 1px solid var(--line);
+    box-shadow: 0 1px 3px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.03);
+  }
+  .glass {
+    @apply rounded-3xl;
+    background: rgba(10,21,16,.7);
+    border: 1px solid rgba(255,255,255,.06);
+    backdrop-filter: blur(16px);
+  }
+
+  /* Inputs */
+  .field {
+    @apply min-h-12 rounded-2xl border px-4 text-sm text-white outline-none transition-all duration-200;
+    background: var(--surface-3);
+    border-color: var(--line);
+    color: var(--text);
+  }
+  .field::placeholder { color: var(--muted-2); }
+  .field:focus { border-color: var(--flare); box-shadow: 0 0 0 3px rgba(255,106,61,.12); }
+
+  /* Buttons */
+  .btn-flare {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-black transition-all duration-200;
+    background: var(--flare);
+    color: #1a0800;
+    box-shadow: 0 0 0 0 rgba(255,106,61,0);
+  }
+  .btn-flare:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255,106,61,.35);
+  }
+  .btn-flare:active { transform: translateY(0); }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-bold transition-all duration-200;
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .btn-ghost:hover { border-color: var(--flare); color: var(--flare); background: var(--fit-bg); }
+
+  /* Sport badge pill */
+  .sport-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold;
+  }
+  .sport-combat  { background: var(--combat-bg);  color: #F98787; }
+  .sport-water   { background: var(--water-bg);   color: #7DD3F0; }
+  .sport-fit     { background: var(--fit-bg);     color: #FFAB8F; }
+  .sport-racquet { background: var(--racquet-bg); color: #B4E55A; }
+  .sport-team    { background: var(--team-bg);    color: #C4B0FF; }
+
+  /* Coach card sport border accent */
+  .card-combat  { border-right: 3px solid var(--combat);  }
+  .card-water   { border-right: 3px solid var(--water);   }
+  .card-fit     { border-right: 3px solid var(--fit);     }
+  .card-racquet { border-right: 3px solid var(--racquet); }
+  .card-team    { border-right: 3px solid var(--team);    }
+
+  /* Status badges */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold;
+  }
+  .badge-green   { background: rgba(52,211,153,.12); color: #6EE7B7; }
+  .badge-amber   { background: rgba(251,191,36,.12);  color: #FDE68A; }
+  .badge-red     { background: rgba(248,113,113,.12); color: #FCA5A5; }
+  .badge-blue    { background: rgba(96,165,250,.12);  color: #93C5FD; }
+  .badge-gray    { background: rgba(156,163,175,.08); color: #9CA3AF; }
+  .badge-violet  { background: rgba(167,139,250,.12); color: #DDD6FE; }
+
+  /* Scoreboard stat block */
+  .stat-block {
+    @apply rounded-2xl p-4;
+    background: var(--surface-2);
+    border: 1px solid var(--line-soft);
+  }
+  .stat-number {
+    @apply text-2xl font-black tabular;
+    font-family: "Changa", sans-serif;
+    color: var(--flare);
+  }
+
+  /* Skeleton shimmer */
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+}
+
+/* ───────────────────────────────────────────────
+   SCROLLBAR
+─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--flare); }
+
+/* ───────────────────────────────────────────────
+   KEYFRAMES (used by Tailwind plugin extend)
+─────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  from { background-position: -400px 0; }
+  to   { background-position:  400px 0; }
+}
