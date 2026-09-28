@@ -3,9 +3,28 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 type ActionState = { error: string | null };
 const EGYPT_PHONE_REGEX = /^01[0125][0-9]{8}$/;
+const STRONG_PASSWORD_REGEX = /^(?=.*\d).{8,}$/;
+
+function safeNext(next: string | null | undefined) {
+  return next === "/coach/dashboard" ? "/coach/dashboard" : "/dashboard";
+}
+
+async function lookupEmailKind(email: string): Promise<"exists" | "missing" | "unknown"> {
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (error) return "unknown";
+    return data.users.some((u: any) => String(u.email ?? "").toLowerCase() === email.toLowerCase())
+      ? "exists"
+      : "missing";
+  } catch {
+    return "unknown";
+  }
+}
 
 export async function signUp(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") ?? "").trim();
@@ -20,8 +39,8 @@ export async function signUp(_prevState: ActionState, formData: FormData): Promi
     return { error: "من فضلك املأ كل البيانات المطلوبة" };
   }
 
-  if (password.length < 6) {
-    return { error: "كلمة المرور لازم تكون 6 أحرف على الأقل" };
+  if (!STRONG_PASSWORD_REGEX.test(password)) {
+    return { error: "كلمة المرور لازم تكون 8 أحرف على الأقل وتحتوي على رقم واحد على الأقل" };
   }
 
   if (password !== confirmPassword) {
@@ -44,31 +63,19 @@ export async function signUp(_prevState: ActionState, formData: FormData): Promi
   const { data, error } = await s.auth.signUp({
     email,
     password,
-    options: {
-      data: { full_name: fullName, phone, role },
-    },
+    options: { data: { full_name: fullName, phone, role } },
   });
 
   if (error) return { error: error.message };
 
-  if (role === "coach" && data.user) {
-    const { error: coachError } = await (s.from("coaches") as any).insert({
-      id: data.user.id,
-    });
-
-    if (coachError) {
-      return { error: "تم إنشاء الحساب لكن تعذر إنشاء ملف المدرب." };
-    }
-  }
-
   revalidatePath("/", "layout");
 
-  // With Supabase email confirmation enabled, user exists but session is null.
   if (data.user && !data.session) {
     redirect(`/auth/verify-email?email=${encodeURIComponent(email)}`);
   }
 
-  redirect(role === "coach" ? "/coach/dashboard" : "/dashboard");
+  if (role === "coach") redirect("/coach/dashboard");
+  redirect("/dashboard");
 }
 
 export async function login(_prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -85,17 +92,17 @@ export async function login(_prevState: ActionState, formData: FormData): Promis
   if (error) {
     if (error.code === "email_not_confirmed" || error.message.toLowerCase().includes("email not confirmed")) {
       return {
-        error: "الإيميل لسه مش متأكد. افتح رسالة التأكيد في بريدك الإلكتروني واضغط على الرابط قبل تسجيل الدخول.",
+        error: "لم يتم تأكيد البريد الإلكتروني. افتح رسالة التأكيد واضغط على الرابط قبل تسجيل الدخول.",
       };
     }
 
-    return { error: "بيانات الدخول غير صحيحة. راجع البريد الإلكتروني وكلمة المرور." };
+    const kind = await lookupEmailKind(email);
+    if (kind === "missing") return { error: "الحساب غير موجود. تأكد من البريد الإلكتروني أو أنشئ حسابًا جديدًا." };
+    if (kind === "exists") return { error: "كلمة المرور غير صحيحة. جرّب مرة أخرى أو استخدم «نسيت كلمة المرور»." };
+    return { error: "تعذر التحقق من بيانات الدخول الآن. حاول مرة أخرى." };
   }
 
-  const {
-    data: { user },
-  } = await s.auth.getUser();
-
+  const { data: { user } } = await s.auth.getUser();
   if (!user) return { error: "تعذر قراءة جلسة الدخول" };
 
   const { data: profile } = await s
@@ -109,6 +116,39 @@ export async function login(_prevState: ActionState, formData: FormData): Promis
   if (profile?.role === "admin") redirect("/admin");
   if (profile?.role === "coach") redirect("/coach/dashboard");
   redirect("/dashboard");
+}
+
+export async function requestPasswordReset(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { error: "اكتب بريدك الإلكتروني" };
+
+  const s = await createClient();
+  const { error } = await s.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001"}/auth/callback?next=/auth/reset-password`,
+  });
+
+  if (error) return { error: error.message };
+  return { error: null };
+}
+
+export async function updatePassword(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirm_password") ?? "");
+
+  if (!STRONG_PASSWORD_REGEX.test(password)) {
+    return { error: "كلمة المرور لازم تكون 8 أحرف على الأقل وتحتوي على رقم واحد على الأقل" };
+  }
+  if (password !== confirmPassword) return { error: "كلمتا المرور غير متطابقتين" };
+
+  const s = await createClient();
+  const { data: { user } } = await s.auth.getUser();
+  if (!user) return { error: "جلسة إعادة التعيين غير صالحة أو انتهت. اطلب رابطًا جديدًا." };
+
+  const { error } = await s.auth.updateUser({ password });
+  if (error) return { error: error.message };
+
+  revalidatePath("/", "layout");
+  redirect("/auth/login?reset=success");
 }
 
 export async function logout() {
