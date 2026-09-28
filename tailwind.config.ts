@@ -35,7 +35,7 @@ export default {
         combat:  { DEFAULT: "#E0483F", muted: "rgba(224,72,63,0.12)", text: "#FF9A92" },
         water:   { DEFAULT: "#14B8A6", muted: "rgba(20,184,166,0.12)", text: "#76E4D5" },
         fit:     { DEFAULT: "#E8A33D", muted: "rgba(232,163,61,0.12)", text: "#F5C978" },
-        racquet: { DEFAULT: "#8B5CF6", muted: "rgba(139,92,246,0.12)", text: "#C4B0FF" },
+        racquet: { DEFAULT: "#0EA5E9", muted: "rgba(14,165,233,0.12)", text: "#7DD3FC" },
         team:    { DEFAULT: "#E0609C", muted: "rgba(224,96,156,0.12)", text: "#F4A6C9" },
       },
       spacing: {
