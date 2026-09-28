@@ -26,12 +26,12 @@ export function BottomNav() {
               href={href}
               id={`bottom-nav-${label}`}
               className="flex min-h-16 flex-col items-center justify-center gap-1 text-[10px] font-bold transition-colors"
-              style={{ color: active ? "var(--flare)" : "var(--muted-2)" }}
+              style={{ color: active ? "var(--cobalt)" : "var(--muted-2)" }}
             >
               <Icon
                 size={20}
                 style={{
-                  filter: active ? "drop-shadow(0 0 6px var(--flare))" : "none",
+                  filter: active ? "drop-shadow(0 0 6px var(--cobalt))" : "none",
                   transition: "filter 0.2s",
                 }}
               />
@@ -39,7 +39,7 @@ export function BottomNav() {
               {active && (
                 <span
                   className="absolute bottom-0 h-0.5 w-8 rounded-full"
-                  style={{ background: "var(--flare)" }}
+                  style={{ background: "var(--cobalt)" }}
                 />
               )}
             </Link>
