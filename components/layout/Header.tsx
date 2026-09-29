@@ -63,9 +63,16 @@ export async function Header() {
           ) : (
             <>
               <Link
+                className="hidden min-h-10 items-center rounded-xl px-3 text-xs font-bold text-cobalt-300 transition-colors sm:inline-flex hover:underline"
+                href="/auth/sign-up?role=coach"
+                id="nav-join-coach"
+              >
+                انضم كمدرب
+              </Link>
+              <Link
                 className="hidden min-h-10 items-center rounded-xl px-3 transition-colors sm:inline-flex"
                 style={{ color: "var(--muted)" }}
-                href="/auth/sign-up"
+                href="/auth/sign-up?role=athlete"
                 id="nav-signup"
               >
                 إنشاء حساب

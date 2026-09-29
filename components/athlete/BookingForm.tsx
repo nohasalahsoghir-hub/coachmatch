@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarDays, Clock3, MapPin, Package, ShieldCheck, ArrowLeft } from "lucide-react";
+import { CalendarDays, Clock3, MapPin, Package, ShieldCheck, ArrowLeft, UserCheck, Sparkles } from "lucide-react";
 import { bookWithPackage, createManualBookingIntent } from "@/lib/actions/bookings";
 import { activatePackage } from "@/lib/actions/packages";
 import type { AvailabilityDay } from "@/lib/marketplace";
@@ -15,6 +16,7 @@ interface Props {
   availability: AvailabilityDay[];
   packageId?: string | null;
   packageRemaining?: number;
+  isAuthenticated?: boolean;
 }
 
 export function BookingForm({
@@ -25,6 +27,7 @@ export function BookingForm({
   availability,
   packageId = null,
   packageRemaining = 0,
+  isAuthenticated = false,
 }: Props) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -32,6 +35,26 @@ export function BookingForm({
   const [time, setTime] = useState(availability[0]?.slots[0] ?? "");
   const [location, setLocation] = useState(locations[0] ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [restoredNotice, setRestoredNotice] = useState(false);
+
+  // Restore draft booking if user just returned from signing up or logging in as athlete
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("coachmatch_pending_booking");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.coachId === coachId) {
+          if (parsed.date) setDate(parsed.date);
+          if (parsed.time) setTime(parsed.time);
+          if (parsed.location) setLocation(parsed.location);
+          if (isAuthenticated) {
+            setRestoredNotice(true);
+            sessionStorage.removeItem("coachmatch_pending_booking");
+          }
+        }
+      }
+    } catch {}
+  }, [coachId, isAuthenticated]);
 
   const selected = useMemo(() => availability.find((x) => x.date === date), [availability, date]);
 
@@ -57,6 +80,19 @@ export function BookingForm({
       setError("يرجى اختيار اليوم والموعد والمكان أولاً.");
       return;
     }
+
+    // Unauthenticated user: Intelligently redirect to sign up as an athlete
+    if (!isAuthenticated) {
+      try {
+        sessionStorage.setItem(
+          "coachmatch_pending_booking",
+          JSON.stringify({ coachId, date, time, location })
+        );
+      } catch {}
+      router.push(`/auth/sign-up?role=athlete&redirect=${encodeURIComponent(`/coaches/${coachId}?resumeBooking=true`)}`);
+      return;
+    }
+
     start(async () => {
       try {
         const res = await createManualBookingIntent({
@@ -78,6 +114,12 @@ export function BookingForm({
       setError("يرجى اختيار اليوم والموعد والمكان.");
       return;
     }
+
+    if (!isAuthenticated) {
+      router.push(`/auth/sign-up?role=athlete&redirect=${encodeURIComponent(`/coaches/${coachId}`)}`);
+      return;
+    }
+
     start(async () => {
       try {
         await bookWithPackage({ packageId, coachId, sessionDate: date, startTime: time, location });
@@ -88,7 +130,12 @@ export function BookingForm({
     });
   };
 
-  const enablePackage = () =>
+  const enablePackage = () => {
+    if (!isAuthenticated) {
+      router.push(`/auth/sign-up?role=athlete&redirect=${encodeURIComponent(`/coaches/${coachId}`)}`);
+      return;
+    }
+
     start(async () => {
       setError(null);
       try {
@@ -98,6 +145,7 @@ export function BookingForm({
         setError(e instanceof Error ? e.message : "تعذر تفعيل الباقة التجريبية.");
       }
     });
+  };
 
   return (
     <div className="surface shadow-xl">
@@ -105,6 +153,13 @@ export function BookingForm({
         <ShieldCheck size={16} />
         <span>المواعيد المعروضة متاحة ومحدثة لحظياً · ضمان استرداد فوري 100%</span>
       </div>
+
+      {restoredNotice && (
+        <div className="mt-4 flex items-center gap-2 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-3.5 text-xs text-emerald-300">
+          <Sparkles size={16} className="shrink-0" />
+          <span>أهلاً بك! تم استعادة الموعد المحدد تلقائياً. اضغط على الزر أدناه لتأكيد حجزك ومتابعة الدفع.</span>
+        </div>
+      )}
 
       {!availability.length ? (
         <div className="mt-5 rounded-2xl border border-dashed border-[var(--line)] p-7 text-center text-sm text-[var(--muted)]">
@@ -220,16 +275,47 @@ export function BookingForm({
             </div>
           )}
 
-          {/* Primary Action Button: Proceed to WhatsApp Payment */}
+          {/* Reassurance banner for unauthenticated visitors */}
+          {!isAuthenticated && (
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-[var(--cobalt)]/25 bg-[var(--cobalt)]/10 p-3.5 text-xs">
+              <UserCheck size={18} className="shrink-0 text-[var(--cobalt)] mt-0.5" />
+              <div className="leading-5">
+                <span className="font-bold text-[var(--text)]">مطلوب حساب متدرب لتأكيد حجز الموعد</span>
+                <p className="mt-0.5 text-[11px] text-[var(--muted)]">
+                  لتثبيت الموعد باسمك وحفظ تفاصيل الدفع، سيتم توجيهك لإنشاء حساب كمتدرب في ثوانٍ ثم العودة مباشرة لإتمام الحجز.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Primary Action Button: Proceed or Sign up as Athlete */}
           <button
             type="button"
             disabled={pending || !date || !time || !location}
             onClick={bookManual}
-            className="btn-cobalt mt-5 min-h-13 w-full rounded-2xl text-sm font-black shadow-lg shadow-[var(--cobalt)]/20 transition-all disabled:opacity-50"
+            className="btn-cobalt mt-4 min-h-13 w-full rounded-2xl text-sm font-black shadow-lg shadow-[var(--cobalt)]/20 transition-all disabled:opacity-50"
           >
-            <span>{pending ? "جارٍ تسجيل طلب الحجز..." : "المتابعة لحجز الموعد والدفع عبر WhatsApp"}</span>
+            <span>
+              {isAuthenticated
+                ? pending
+                  ? "جارٍ تسجيل طلب الحجز..."
+                  : "المتابعة لحجز الموعد والدفع عبر WhatsApp"
+                : "سجّل كمتدرب لتأكيد الموعد والمتابعة"}
+            </span>
             <ArrowLeft size={16} />
           </button>
+
+          {!isAuthenticated && (
+            <p className="mt-2 text-center text-xs text-[var(--muted)]">
+              لديك حساب بالفعل؟{" "}
+              <Link
+                href={`/auth/login?role=athlete&redirect=${encodeURIComponent(`/coaches/${coachId}?resumeBooking=true`)}`}
+                className="font-bold text-[var(--cobalt)] hover:underline"
+              >
+                تسجيل الدخول هنا
+              </Link>
+            </p>
+          )}
 
           {/* Free Trial Package (if eligible) */}
           {packageRate > 0 && !packageId && (
@@ -240,7 +326,11 @@ export function BookingForm({
               className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--line)] text-xs font-bold text-[var(--muted)] transition hover:bg-white/5 disabled:opacity-50"
             >
               <Package size={14} />
-              <span>تفعيل باقة تجريبية مجانية (8 حصص)</span>
+              <span>
+                {isAuthenticated
+                  ? "تفعيل باقة تجريبية مجانية (8 حصص)"
+                  : "سجّل كمتدرب لتفعيل الباقة التجريبية المجانية"}
+              </span>
             </button>
           )}
 

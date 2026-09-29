@@ -26,9 +26,19 @@ export async function updateSession(request: NextRequest) {
     const isCoachRoute = pathName === "/coach" || pathName.startsWith("/coach/");
     const isCallback = pathName === "/auth/callback";
 
-    if (!user && (isAthleteRoute || isCoachRoute)) {
+    const isCheckoutRoute = pathName.startsWith("/checkout/");
+
+    if (!user && (isAthleteRoute || isCoachRoute || isCheckoutRoute)) {
       const url = request.nextUrl.clone();
-      url.pathname = "/auth/login";
+      if (isCoachRoute) {
+        url.pathname = "/auth/sign-up";
+        url.searchParams.set("role", "coach");
+        url.searchParams.set("redirect", pathName);
+      } else {
+        url.pathname = "/auth/sign-up";
+        url.searchParams.set("role", "athlete");
+        url.searchParams.set("redirect", pathName);
+      }
       return NextResponse.redirect(url);
     }
 

@@ -17,6 +17,8 @@ export async function signUp(_prevState: ActionState, formData: FormData): Promi
   const phone = String(formData.get("phone") ?? "").trim();
   const role = String(formData.get("role") ?? "athlete");
   const termsAccepted = formData.get("terms_accepted") === "on";
+  const rawRedirect = String(formData.get("redirect_to") ?? "").trim();
+  const safeRedirect = rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : null;
 
   if (!email || !password || !confirmPassword || !fullName || !phone) return { error: "يرجى إدخال جميع البيانات المطلوبة" };
   if (!STRONG_PASSWORD_REGEX.test(password)) return { error: "كلمة المرور لازم تكون 8 أحرف على الأقل وتحتوي على رقم واحد على الأقل" };
@@ -43,13 +45,23 @@ export async function signUp(_prevState: ActionState, formData: FormData): Promi
 
   revalidatePath("/", "layout");
 
-  if (!data.session) redirect(`/auth/verify-email?email=${encodeURIComponent(email)}`);
+  if (!data.session) {
+    const verifyUrl = `/auth/verify-email?email=${encodeURIComponent(email)}${safeRedirect ? `&redirect=${encodeURIComponent(safeRedirect)}` : ""}`;
+    redirect(verifyUrl);
+  }
+
+  if (safeRedirect) {
+    redirect(safeRedirect);
+  }
   redirect(role === "coach" ? "/coach/dashboard" : "/dashboard");
 }
 
 export async function login(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const rawRedirect = String(formData.get("redirect_to") ?? "").trim();
+  const safeRedirect = rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : null;
+
   if (!email || !password) return { error: "يجب إدخال البريد الإلكتروني وكلمة المرور" };
 
   const s = await createClient();
@@ -67,6 +79,10 @@ export async function login(_prevState: ActionState, formData: FormData): Promis
 
   const { data: profile } = await s.from("profiles").select("role").eq("id", user.id).maybeSingle();
   revalidatePath("/", "layout");
+
+  if (safeRedirect) {
+    redirect(safeRedirect);
+  }
 
   if (profile?.role === "coach") redirect("/coach/dashboard");
   redirect("/dashboard");
