@@ -42,6 +42,7 @@ export async function updateCoachProfile(input:{
   sports:string[];
   locations:string[];
   languages:string[];
+  cvUrl?:string|null;
 }){
   const {s,user}=await assertCoach();
   const headline=input.headline.trim();
@@ -51,18 +52,15 @@ export async function updateCoachProfile(input:{
   if(!Number.isFinite(input.sessionRate)||input.sessionRate<50||input.sessionRate>5000) throw new Error("سعر الجلسة يجب أن يكون بين 50 و5000 جنيه");
   if(!Number.isFinite(input.packageRate)||input.packageRate<50||input.packageRate>5000) throw new Error("سعر باقة 8 حصص يجب أن يكون بين 50 و5000 جنيه");
 
-  const requestedSports=cleanList(input.sports,8);
-  if(requestedSports.length===0) throw new Error("يجب اختيار رياضة واحدة على الأقل");
-  const {data:sportRows,error:sportError}=await s.from("sports").select("name_ar").eq("is_active",true);
-  if(sportError) throw new Error(sportError.message);
-  const allowed=new Set((sportRows??[]).map(x=>x.name_ar));
-  if(requestedSports.some(x=>!allowed.has(x))) throw new Error("يجب اختيار الرياضات من قائمة المنصة فقط");
+  const requestedSports=cleanList(input.sports,10);
+  if(requestedSports.length===0) throw new Error("يجب اختيار أو كتابة رياضة واحدة على الأقل");
+  if(requestedSports.some(s=>s.length>50)) throw new Error("اسم الرياضة يجب ألا يتجاوز 50 حرفاً");
 
-  const locations=cleanList(input.locations,8);
+  const locations=cleanList(input.locations,10);
   if(locations.length===0) throw new Error("يجب إضافة مكان تدريب واحد على الأقل");
   const languages=cleanList(input.languages.length?input.languages:["العربية"],6);
 
-  const {error}=await s.from("coaches").update({
+  const updateData:any = {
     headline,
     bio,
     session_rate:Math.round(input.sessionRate*100)/100,
@@ -70,13 +68,67 @@ export async function updateCoachProfile(input:{
     sports:requestedSports,
     training_locations:locations,
     languages
-  }).eq("id",user.id);
+  };
+  if(input.cvUrl!==undefined){
+    updateData.cv_url=input.cvUrl;
+  }
+
+  const {error}=await s.from("coaches").update(updateData).eq("id",user.id);
   if(error) throw new Error(error.message);
 
   revalidatePath("/coach/profile");
   revalidatePath("/coach/dashboard");
   revalidatePath("/coaches");
   revalidatePath(`/coaches/${user.id}`);
+  return {ok:true};
+}
+
+export async function uploadCoachCv(formData:FormData){
+  const {s,user}=await assertCoach();
+  const file=formData.get("file");
+  if(!(file instanceof File)) throw new Error("يجب اختيار ملف السيرة الذاتية (CV)");
+  if(file.size>10*1024*1024) throw new Error("ملف الـ CV يجب ألا يتجاوز 10 ميجابايت");
+
+  const allowedTypes=[
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ];
+  if(!allowedTypes.includes(file.type)){
+    throw new Error("نوع الملف غير مدعوم. يرجى رفع ملف PDF أو Word أو صورة.");
+  }
+
+  const ext=file.name.split(".").pop()||"pdf";
+  const path=`${user.id}/cv_${Date.now()}.${ext}`;
+
+  const {error:uploadError}=await s.storage.from("coach-documents").upload(path,file,{
+    upsert:true,
+    contentType:file.type,
+    cacheControl:"3600"
+  });
+  if(uploadError) throw new Error(uploadError.message);
+
+  const {data}=s.storage.from("coach-documents").getPublicUrl(path);
+  const cvUrl=data.publicUrl;
+
+  const {error:updateError}=await s.from("coaches").update({cv_url:cvUrl}).eq("id",user.id);
+  if(updateError) throw new Error(updateError.message);
+
+  revalidatePath("/coach/profile");
+  revalidatePath("/coach/dashboard");
+  return {cv_url:cvUrl,fileName:file.name};
+}
+
+export async function deleteCoachCv(){
+  const {s,user}=await assertCoach();
+  const {error}=await s.from("coaches").update({cv_url:null}).eq("id",user.id);
+  if(error) throw new Error(error.message);
+
+  revalidatePath("/coach/profile");
+  revalidatePath("/coach/dashboard");
   return {ok:true};
 }
 

@@ -1,52 +1,481 @@
 "use client";
 
-import { useState,useTransition } from "react";
-import { Save } from "lucide-react";
-import { updateCoachProfile,uploadCoachAvatar } from "@/lib/actions/coach";
+import { useId, useState, useTransition } from "react";
+import {
+  Award,
+  CheckCircle2,
+  FileCheck,
+  FileText,
+  FileUp,
+  MapPin,
+  Save,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import { SearchableCombobox } from "@/components/ui/SearchableCombobox";
+import {
+  deleteCoachCv,
+  updateCoachProfile,
+  uploadCoachAvatar,
+  uploadCoachCv,
+} from "@/lib/actions/coach";
 
-type Sport={slug:string;name_ar:string};
-type Initial={headline:string;bio:string;session_rate:number;package_8_rate:number;sports:string[];training_locations:string[];languages:string[];avatar_url?:string|null};
+type Sport = { slug: string; name_ar: string };
 
-export function CoachSelfManagementForm({initial,sports}:{initial:Initial;sports:Sport[]}){
-  const [v,setV]=useState(initial);
-  const [busy,start]=useTransition();
-  const [ok,setOk]=useState(false);
-  const [error,setError]=useState("");
-  const update=(patch:Partial<Initial>)=>{setV(x=>({...x,...patch}));setOk(false);};
-  const toggleSport=(name:string)=>update({sports:v.sports.includes(name)?v.sports.filter(x=>x!==name):[...v.sports,name]});
-  const save=()=>start(async()=>{
-    setError("");setOk(false);
-    try{await updateCoachProfile({headline:v.headline,bio:v.bio,sessionRate:Number(v.session_rate),packageRate:Number(v.package_8_rate),sports:v.sports,locations:v.training_locations,languages:v.languages});setOk(true);}
-    catch(e){setError(e instanceof Error?e.message:"تعذر حفظ البيانات");}
-  });
-  const upload=(file:File|null)=>{if(!file)return;const fd=new FormData();fd.set("file",file);start(async()=>{
-    setError("");setOk(false);
-    try{const url=await uploadCoachAvatar(fd);update({avatar_url:url});setOk(true);}
-    catch(e){setError(e instanceof Error?e.message:"تعذر رفع الصورة");}
-  })};
-  return <div className="space-y-6">
-    <div className="rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-6">
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-        <div className="flex items-center gap-4">
-          {v.avatar_url?<img src={v.avatar_url} alt="" className="h-20 w-20 rounded-3xl object-cover"/>:<div className="grid h-20 w-20 place-items-center rounded-3xl bg-cobalt-500/10 text-2xl font-black text-cobalt-300">{v.headline.slice(0,1)||"م"}</div>}
-          <div><p className="font-black">الصورة الشخصية</p><p className="mt-2 text-[11px] text-[var(--muted-2)]">JPG أو PNG أو WebP حتى 5MB.</p></div>
+type Initial = {
+  headline: string;
+  bio: string;
+  session_rate: number;
+  package_8_rate: number;
+  sports: string[];
+  training_locations: string[];
+  languages: string[];
+  avatar_url?: string | null;
+  cv_url?: string | null;
+};
+
+const EGYPT_GOVERNORATES = [
+  "القاهرة",
+  "الجيزة",
+  "الإسكندرية",
+  "الدقهلية (المنصورة)",
+  "الشرقية (الزقازيق)",
+  "الغربية (طنطا)",
+  "المنوفية (شبين الكوم)",
+  "القليوبية (بنها / شبرا)",
+  "البحيرة (دمنهور)",
+  "كفر الشيخ",
+  "دمياط",
+  "بورسعيد",
+  "الإسماعيلية",
+  "السويس",
+  "البحر الأحمر (الغردقة)",
+  "شمال سيناء",
+  "جنوب سيناء (شرم الشيخ)",
+  "الفيوم",
+  "بني سويف",
+  "المنيا",
+  "أسيوط",
+  "سوهاج",
+  "قنا",
+  "الأقصر",
+  "أسوان",
+  "مطروح (الساحل الشمالي)",
+  "الوادي الجديد",
+  "أونلاين (عن بُعد)",
+];
+
+export function CoachSelfManagementForm({
+  initial,
+  sports,
+}: {
+  initial: Initial;
+  sports: Sport[];
+}) {
+  const [v, setV] = useState(initial);
+  const [busy, start] = useTransition();
+  const [cvBusy, startCv] = useTransition();
+  const [ok, setOk] = useState(false);
+  const [cvOk, setCvOk] = useState(false);
+  const [error, setError] = useState("");
+  const [cvError, setCvError] = useState("");
+
+  const avatarInputId = useId();
+  const cvInputId = useId();
+
+  const update = (patch: Partial<Initial>) => {
+    setV((x) => ({ ...x, ...patch }));
+    setOk(false);
+  };
+
+  const sportsMasterList = Array.from(
+    new Set([...sports.map((s) => s.name_ar), ...v.sports])
+  );
+
+  const save = () =>
+    start(async () => {
+      setError("");
+      setOk(false);
+      try {
+        await updateCoachProfile({
+          headline: v.headline,
+          bio: v.bio,
+          sessionRate: Number(v.session_rate),
+          packageRate: Number(v.package_8_rate),
+          sports: v.sports,
+          locations: v.training_locations,
+          languages: v.languages,
+          cvUrl: v.cv_url,
+        });
+        setOk(true);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "تعذر حفظ البيانات");
+      }
+    });
+
+  const uploadAvatar = (file: File | null) => {
+    if (!file) return;
+    const fd = new FormData();
+    fd.set("file", file);
+    start(async () => {
+      setError("");
+      setOk(false);
+      try {
+        const url = await uploadCoachAvatar(fd);
+        update({ avatar_url: url });
+        setOk(true);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "تعذر رفع الصورة");
+      }
+    });
+  };
+
+  const handleUploadCv = (file: File | null) => {
+    if (!file) return;
+    const fd = new FormData();
+    fd.set("file", file);
+    startCv(async () => {
+      setCvError("");
+      setCvOk(false);
+      try {
+        const res = await uploadCoachCv(fd);
+        update({ cv_url: res.cv_url });
+        setCvOk(true);
+      } catch (e) {
+        setCvError(e instanceof Error ? e.message : "تعذر رفع ملف السيرة الذاتية");
+      }
+    });
+  };
+
+  const handleDeleteCv = () => {
+    if (!confirm("هل أنت متأكد من رغبتك في حذف ملف السيرة الذاتية؟")) return;
+    startCv(async () => {
+      setCvError("");
+      setCvOk(false);
+      try {
+        await deleteCoachCv();
+        update({ cv_url: null });
+        setCvOk(true);
+      } catch (e) {
+        setCvError(e instanceof Error ? e.message : "تعذر حذف الملف");
+      }
+    });
+  };
+
+  // Discount calculation for package
+  const singleTotal8 = (v.session_rate || 0) * 8;
+  const packageDiscountPct =
+    singleTotal8 > 0 && v.package_8_rate < singleTotal8
+      ? Math.round(((singleTotal8 - v.package_8_rate) / singleTotal8) * 100)
+      : 0;
+
+  return (
+    <div className="space-y-6">
+      {/* 1. Avatar & Personal Brand */}
+      <div className="rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-6">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            {v.avatar_url ? (
+              <img
+                src={v.avatar_url}
+                alt=""
+                className="h-20 w-20 rounded-3xl object-cover border border-[var(--line)]"
+              />
+            ) : (
+              <div className="grid h-20 w-20 place-items-center rounded-3xl bg-[rgba(62,111,242,0.1)] text-2xl font-black text-[var(--cobalt)]">
+                {v.headline?.slice(0, 1) || "م"}
+              </div>
+            )}
+            <div>
+              <p className="text-base font-black text-[var(--text)]">الصورة الشخصية للمدرب</p>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                صورة واضحة ومهنية بالزي الرياضي تعزز ثقة المتدربين. (JPG, PNG, WebP حتى 5MB)
+              </p>
+            </div>
+          </div>
+          <label
+            htmlFor={avatarInputId}
+            className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[var(--cobalt)]/30 bg-[var(--cobalt)]/10 px-5 text-xs font-black text-[var(--cobalt)] transition hover:bg-[var(--cobalt)]/20"
+          >
+            <Upload size={14} />
+            تغيير الصورة
+            <input
+              id={avatarInputId}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="sr-only"
+              disabled={busy}
+              onChange={(e) => uploadAvatar(e.target.files?.[0] ?? null)}
+            />
+          </label>
         </div>
-        <label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-cobalt-500/20 px-4 text-xs font-black text-cobalt-300">اختيار صورة<input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" disabled={busy} onChange={e=>upload(e.target.files?.[0]??null)}/></label>
+      </div>
+
+      {/* 2. CV & Certifications Upload */}
+      <div className="rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-cobalt-300">
+              <Award size={15} />
+              <span>السيرة الذاتية والشهادات المعتمدة</span>
+            </div>
+            <h3 className="mt-1 text-base font-black text-[var(--text)]">
+              توثيق المؤهلات وسنوات الخبرة
+            </h3>
+            <p className="mt-1 text-xs leading-6 text-[var(--muted)]">
+              ارفع ملف الـ CV أو شهادات التدريب والاتحادات الرياضية لتسريع اعتماد حسابك وظهوره بشارة «مدرب موثّق».
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-dashed border-[var(--line)] bg-[var(--surface-2)] p-5 text-center">
+          {v.cv_url ? (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 text-right">
+                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-400">
+                  <FileCheck size={24} />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-[var(--text)]">تم رفع ملف السيرة الذاتية بنجاح ✓</p>
+                  <p className="mt-0.5 text-[11px] text-[var(--muted-2)]">
+                    الملف متاح للمراجعة والتوثيق من إدارة المنصة.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href={v.cv_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[var(--line)] px-3 text-xs font-bold text-[var(--text)] transition hover:bg-white/5"
+                >
+                  <FileText size={14} />
+                  معاينة الملف
+                </a>
+                <label
+                  htmlFor={cvInputId}
+                  className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[var(--cobalt)]/30 bg-[var(--cobalt)]/10 px-3 text-xs font-bold text-[var(--cobalt)] transition hover:bg-[var(--cobalt)]/20"
+                >
+                  <FileUp size={14} />
+                  استبدال
+                  <input
+                    id={cvInputId}
+                    type="file"
+                    accept=".pdf,.doc,.docx,image/*"
+                    className="sr-only"
+                    disabled={cvBusy}
+                    onChange={(e) => handleUploadCv(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+                <button
+                  type="button"
+                  disabled={cvBusy}
+                  onClick={handleDeleteCv}
+                  className="grid h-10 w-10 place-items-center rounded-xl border border-rose-500/30 text-rose-300 transition hover:bg-rose-500/10"
+                  title="حذف الملف"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[var(--surface-3)] text-[var(--muted-2)]">
+                <FileUp size={22} />
+              </div>
+              <p className="mt-3 text-xs font-bold text-[var(--text)]">
+                لم يتم رفع سيرة ذاتية أو شهادات بعد
+              </p>
+              <p className="mt-1 text-[11px] text-[var(--muted-2)]">
+                يدعم ملفات PDF و Word والصور حتى 10 ميجابايت.
+              </p>
+              <label
+                htmlFor={cvInputId}
+                className="mt-4 inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[var(--cobalt)] px-5 text-xs font-black text-white shadow-md shadow-[var(--cobalt)]/25 transition hover:scale-[1.02]"
+              >
+                <Upload size={14} />
+                {cvBusy ? "جارٍ الرفع..." : "اختر ملف الـ CV أو الشهادة"}
+                <input
+                  id={cvInputId}
+                  type="file"
+                  accept=".pdf,.doc,.docx,image/*"
+                  className="sr-only"
+                  disabled={cvBusy}
+                  onChange={(e) => handleUploadCv(e.target.files?.[0] ?? null)}
+                />
+              </label>
+            </div>
+          )}
+
+          {cvError && (
+            <p role="alert" className="mt-3 rounded-xl border border-rose-500/20 bg-rose-500/10 p-2.5 text-xs text-rose-200">
+              {cvError}
+            </p>
+          )}
+          {cvOk && (
+            <p className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-2.5 text-xs font-bold text-emerald-300">
+              تم تحديث ملف السيرة الذاتية بنجاح ✓
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* 3. Core Profile & Pricing Details */}
+      <div className="rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-6 space-y-6">
+        <div>
+          <h3 className="text-base font-black text-[var(--text)]">البيانات الأساسية والتسعير</h3>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            حدد المسمى الظاهر للمتدربين، التسعير، والرياضات والمحافظات المتاحة للتدريب.
+          </p>
+        </div>
+
+        {/* Headline */}
+        <div>
+          <label className="block text-xs font-bold text-[var(--muted)]">
+            العنوان الظاهر في الملف والبطاقة
+          </label>
+          <input
+            value={v.headline}
+            maxLength={120}
+            onChange={(e) => update({ headline: e.target.value })}
+            placeholder="مثال: مدرب لياقة بدنية وبناء أجسام معتمد من IFBB"
+            className="field mt-2 w-full text-xs"
+          />
+          <span className="mt-1 block text-[10px] text-[var(--muted-2)]">
+            {v.headline.length} / 120 حرف
+          </span>
+        </div>
+
+        {/* Pricing Structure */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-2)] p-4">
+            <label className="block text-xs font-bold text-[var(--text)]">
+              سعر الجلسة الفردية (ج.م)
+            </label>
+            <input
+              type="number"
+              min={50}
+              max={5000}
+              value={v.session_rate}
+              onChange={(e) => update({ session_rate: Number(e.target.value) })}
+              className="field mt-2 w-full text-sm font-black font-mono"
+            />
+            <span className="mt-1 block text-[10px] text-[var(--muted-2)]">
+              قيمة الجلسة الواحدة (ساعة تدريبية)
+            </span>
+          </div>
+
+          <div className="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-2)] p-4">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-[var(--text)]">
+                سعر باقة 8 حصص (ج.م)
+              </label>
+              {packageDiscountPct > 0 && (
+                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-black text-emerald-400">
+                  خصم {packageDiscountPct}% للمتدرب
+                </span>
+              )}
+            </div>
+            <input
+              type="number"
+              min={50}
+              max={5000}
+              value={v.package_8_rate}
+              onChange={(e) => update({ package_8_rate: Number(e.target.value) })}
+              className="field mt-2 w-full text-sm font-black font-mono"
+            />
+            <span className="mt-1 block text-[10px] text-[var(--muted-2)]">
+              باقة شهرية تشجع المتدرب على الالتزام والاستمرارية
+            </span>
+          </div>
+        </div>
+
+        {/* 4. Smart Searchable Autocomplete: Sports */}
+        <div className="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-2)] p-4">
+          <SearchableCombobox
+            label="الرياضات والتخصصات (اكتب للبحث أو اختر من القائمة)"
+            options={sportsMasterList}
+            selected={v.sports}
+            onChange={(selectedSports) => update({ sports: selectedSports })}
+            placeholder="اكتب أول أحرف من الرياضة (مثال: ك، ب، ت، س)..."
+            allowCustom={true}
+            maxItems={8}
+          />
+        </div>
+
+        {/* 5. Smart Searchable Autocomplete: Governorates & Locations */}
+        <div className="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-2)] p-4">
+          <SearchableCombobox
+            label="المحافظات وأماكن التدريب المتاحة (اكتب للبحث أو اختر من القائمة)"
+            options={EGYPT_GOVERNORATES}
+            selected={v.training_locations}
+            onChange={(selectedLocations) => update({ training_locations: selectedLocations })}
+            placeholder="اكتب أول أحرف من المحافظة (مثال: ق، ج، إ، ط، م)..."
+            allowCustom={true}
+            maxItems={10}
+          />
+        </div>
+
+        {/* Bio */}
+        <div>
+          <label className="block text-xs font-bold text-[var(--muted)]">
+            نبذة عن خبراتك وأسلوبك التدريبي
+          </label>
+          <textarea
+            value={v.bio}
+            maxLength={2500}
+            onChange={(e) => update({ bio: e.target.value })}
+            placeholder="اكتب نبذة تشرح فيها خبراتك، الشهادات الحاصل عليها، الفئات التي تدربها (مبتدئين، متقدمين، أطفال، تأهيل إصابات)..."
+            className="field mt-2 min-h-36 w-full py-3 text-xs leading-6"
+          />
+          <span className="mt-1 block text-[10px] text-[var(--muted-2)]">
+            {v.bio.length} / 2500 حرف
+          </span>
+        </div>
+
+        {/* Languages */}
+        <div>
+          <label className="block text-xs font-bold text-[var(--muted)]">
+            اللغات التي تجيد التدريب بها (مفصولة بفاصلة)
+          </label>
+          <input
+            value={v.languages.join("، ")}
+            onChange={(e) =>
+              update({
+                languages: e.target.value
+                  .split("،")
+                  .map((x) => x.trim())
+                  .filter(Boolean),
+              })
+            }
+            placeholder="مثال: العربية، English"
+            className="field mt-2 w-full text-xs"
+          />
+        </div>
+
+        {error && (
+          <p role="alert" className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-200">
+            {error}
+          </p>
+        )}
+
+        {ok && (
+          <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-bold text-emerald-300">
+            <CheckCircle2 size={16} />
+            <span>تم حفظ البيانات وتحديث ملفك الشخصي بنجاح.</span>
+          </div>
+        )}
+
+        <button
+          type="button"
+          disabled={busy}
+          onClick={save}
+          className="btn-cobalt min-h-12 w-full text-sm font-black shadow-lg shadow-[var(--cobalt)]/25 transition disabled:opacity-50"
+        >
+          <Save size={16} />
+          {busy ? "جارٍ الحفظ..." : "حفظ وتحديث الملف الشخصي"}
+        </button>
       </div>
     </div>
-    <div className="rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-6 space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block text-xs text-[var(--muted)]">العنوان الظاهر في الملف<input value={v.headline} maxLength={120} onChange={e=>update({headline:e.target.value})} className="field mt-2" /></label>
-        <label className="block text-xs text-[var(--muted)]">سعر الجلسة (ج.م)<input type="number" min={50} max={5000} value={v.session_rate} onChange={e=>update({session_rate:Number(e.target.value)})} className="field mt-2" /></label>
-      </div>
-      <label className="block text-xs text-[var(--muted)]">سعر باقة 8 حصص (ج.م)<input type="number" min={50} max={5000} value={v.package_8_rate} onChange={e=>update({package_8_rate:Number(e.target.value)})} className="field mt-2" /></label>
-      <label className="block text-xs text-[var(--muted)]">نبذة عنك<textarea value={v.bio} maxLength={2500} onChange={e=>update({bio:e.target.value})} className="field mt-2 min-h-36 py-3" /></label>
-      <div><p className="text-xs text-[var(--muted)]">الرياضات والتخصصات</p><div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{sports.map(s=><button type="button" key={s.slug} disabled={busy} onClick={()=>toggleSport(s.name_ar)} className={`min-h-11 rounded-xl border px-3 text-right text-xs font-bold ${v.sports.includes(s.name_ar)?"border-cobalt-500 bg-cobalt-500/10 text-cobalt-300":"border-[var(--line)] bg-[var(--surface-2)] text-[var(--muted)]"}`}>{s.name_ar}</button>)}</div><p className="mt-2 text-[11px] text-[var(--muted-2)]">مختار: {v.sports.length}</p></div>
-      <label className="block text-xs text-[var(--muted)]">أماكن التدريب<select className="field mt-2" multiple value={v.training_locations} onChange={e=>update({training_locations:Array.from(e.target.selectedOptions).map(x=>x.value)})}><option value="القاهرة">القاهرة</option><option value="الجيزة">الجيزة</option><option value="الإسكندرية">الإسكندرية</option><option value="المنصورة">المنصورة</option><option value="أسيوط">أسيوط</option><option value="سوهاج">سوهاج</option><option value="قنا">قنا</option><option value="الأقصر">الأقصر</option><option value="أسوان">أسوان</option><option value="أونلاين">أونلاين</option></select><span className="mt-2 block text-[10px] text-[var(--muted-2)]">للاختيار المتعدد، يمكن تحديد أكثر من مكان باستخدام Ctrl/Cmd.</span></label>
-      <label className="block text-xs text-[var(--muted)]">اللغات<input value={v.languages.join("، ")} onChange={e=>update({languages:e.target.value.split("،").map(x=>x.trim()).filter(Boolean)})} className="field mt-2" /></label>
-      {error&&<p role="alert" className="rounded-xl bg-rose-500/10 p-3 text-xs text-rose-200">{error}</p>}
-      {ok&&<p className="rounded-xl bg-emerald-500/10 p-3 text-xs font-bold text-emerald-200">تم الحفظ وتحديث الملف العام.</p>}
-      <button type="button" disabled={busy} onClick={save} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-cobalt-500 text-sm font-black text-white disabled:opacity-50"><Save size={16}/>{busy?"جاري الحفظ...":"حفظ البيانات"}</button>
-    </div>
-  </div>;
+  );
 }
