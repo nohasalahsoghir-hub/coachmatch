@@ -32,4 +32,9 @@ jobs:
             echo 'Legacy radius tokens found.'
             exit 1
           fi
+          if grep -RniE 'اختاري|اكتشفي|ابدئي|أضيفي|استخدمي|راجعي|جربي|تأكدي|حاولي|اكتبي|اطلبي|فعّلي|تعيدي|سجّلي|عايزة' app components lib --include='*.tsx' --include='*.ts' --include='*.css'; then
+            echo 'Gendered Arabic user-facing copy found.'
+            exit 1
+          fi
+          echo 'Gender-neutral Arabic copy audit passed.'
           echo 'Design audit passed.'
