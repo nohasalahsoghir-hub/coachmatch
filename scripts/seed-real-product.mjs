@@ -176,7 +176,7 @@ async function ensureSeedCoachPool(coachUserId, sports) {
   const availabilityRows = [];
   for (let i = 0; i < finalCoaches.length; i++) {
     const coachId = finalCoaches[i].id;
-    const sport = sports[i % sports.length];
+    const sport = seededSports[i % seededSports.length];
     sportsRows.push({ coach_id: coachId, sport_id: sport.id, specialization: sport.name_ar, is_primary: true, is_demo: true });
     for (let day = 0; day < SLOT_STARTS.length; day++) {
       const hour = Number(SLOT_STARTS[day].slice(0, 2));
@@ -226,7 +226,7 @@ async function seed() {
   if (sports.length < 5) throw new Error("بيانات الرياضات غير مكتملة");
   const seededSports = sports.slice(0, 5);
 
-  const coachIds = await ensureSeedCoachPool(coachUser.id, sports);
+  const coachIds = await ensureSeedCoachPool(coachUser.id, seededSports);
   const coach1 = await must("coach1", () => db.from("coaches").select("id,session_rate,package_8_rate,training_locations").eq("id", coachUser.id).single());
   const coach2 = await must("coach2", () => db.from("coaches").select("id,session_rate,training_locations").in("id", coachIds.filter((id) => id !== coachUser.id)).order("created_at").limit(1).single());
   const coach3 = coachIds.find((id) => id !== coachUser.id && id !== coach2.id) || coach2.id;
@@ -308,7 +308,7 @@ async function seed() {
     { user_id: coach1.id, type: "booking", title: "حجز جديد", body: "لديك جلسة مؤكدة جديدة.", link: "/coach/dashboard", is_demo: true },
   ]));
 
-  console.log(JSON.stringify({ ok: true, accounts: { athlete: "athlete.seed@coachmatch.test", coach: "coach.seed@coachmatch.test", admin: "admin.seed@coachmatch.test" }, password: PASSWORD, seed_coaches: coachIds.length, seed_sports: seededSports.map((s) => s.name_ar), seed_availability: coachIds.length * SLOT_STARTS.length, seed_password: PASSWORD }));
+  console.log(JSON.stringify({ ok: true, accounts: { athlete: "athlete.seed@coachmatch.test", coach: "coach.seed@coachmatch.test" }, password: PASSWORD, seed_coaches: coachIds.length, seed_sports: seededSports.map((s) => s.name_ar), seed_availability: coachIds.length * SLOT_STARTS.length }));
 }
 
 await seed();
