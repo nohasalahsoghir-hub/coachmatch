@@ -18,6 +18,8 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx tsc --noEmit
+      - name: Seed script syntax audit
+        run: node --check scripts/seed-real-product.mjs
       - name: Legacy design audit
         shell: bash
         run: |
