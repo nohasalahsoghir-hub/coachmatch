@@ -23,10 +23,25 @@ function validateTime(v:string){
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 }
 
-export async function setCoachBookingAcceptance(next:boolean){
-  const {s,user}=await assertCoach();
-  const {error}=await s.from("coaches").update({accepting_bookings:Boolean(next)}).eq("id",user.id);
-  if(error) throw new Error(error.message);
+export async function setCoachBookingAcceptance(next: boolean) {
+  const { s, user } = await assertCoach();
+  const { data: coach, error: coachError } = await s
+    .from("coaches")
+    .select("is_verified")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (coachError) throw new Error(coachError.message);
+
+  if (Boolean(next) && !coach?.is_verified) {
+    throw new Error("لا يمكن تفعيل استقبال الحجوزات قبل مراجعة واعتماد الحساب من إدارة المنصة.");
+  }
+
+  const { error } = await s
+    .from("coaches")
+    .update({ accepting_bookings: Boolean(next) })
+    .eq("id", user.id);
+  if (error) throw new Error(error.message);
+
   revalidatePath("/coach/profile");
   revalidatePath("/coach/dashboard");
   revalidatePath("/coaches");
@@ -34,102 +49,128 @@ export async function setCoachBookingAcceptance(next:boolean){
   return Boolean(next);
 }
 
-export async function updateCoachProfile(input:{
-  headline:string;
-  bio:string;
-  sessionRate:number;
-  packageRate:number;
-  sports:string[];
-  locations:string[];
-  languages:string[];
-  cvUrl?:string|null;
-}){
-  const {s,user}=await assertCoach();
-  const headline=input.headline.trim();
-  const bio=input.bio.trim();
-  if(!headline || headline.length>120) throw new Error("يجب إدخال عنوان بين حرف واحد و120 حرفًا");
-  if(!bio || bio.length>2500) throw new Error("النبذة مطلوبة وبحد أقصى 2500 حرف");
-  if(!Number.isFinite(input.sessionRate)||input.sessionRate<50||input.sessionRate>5000) throw new Error("سعر الجلسة يجب أن يكون بين 50 و5000 جنيه");
-  if(!Number.isFinite(input.packageRate)||input.packageRate<50||input.packageRate>5000) throw new Error("سعر باقة 8 حصص يجب أن يكون بين 50 و5000 جنيه");
-
-  const requestedSports=cleanList(input.sports,10);
-  if(requestedSports.length===0) throw new Error("يجب اختيار أو كتابة رياضة واحدة على الأقل");
-  if(requestedSports.some(s=>s.length>50)) throw new Error("اسم الرياضة يجب ألا يتجاوز 50 حرفاً");
-
-  const locations=cleanList(input.locations,10);
-  if(locations.length===0) throw new Error("يجب إضافة مكان تدريب واحد على الأقل");
-  const languages=cleanList(input.languages.length?input.languages:["العربية"],6);
-
-  const updateData:any = {
-    headline,
-    bio,
-    session_rate:Math.round(input.sessionRate*100)/100,
-    package_8_rate:Math.round(input.packageRate*100)/100,
-    sports:requestedSports,
-    training_locations:locations,
-    languages
-  };
-  if(input.cvUrl!==undefined){
-    updateData.cv_url=input.cvUrl;
+export async function updateCoachProfile(input: {
+  headline: string;
+  bio: string;
+  sessionRate: number;
+  packageRate: number;
+  sports: string[];
+  locations: string[];
+  languages: string[];
+  cvUrl?: string | null;
+  instapayAddress?: string | null;
+}) {
+  const { s, user } = await assertCoach();
+  const headline = input.headline.trim();
+  const bio = input.bio.trim();
+  if (!headline || headline.length > 120) throw new Error("يجب إدخال عنوان بين حرف واحد و120 حرفًا");
+  if (!bio || bio.length > 2500) throw new Error("النبذة مطلوبة وبحد أقصى 2500 حرف");
+  if (!Number.isFinite(input.sessionRate) || input.sessionRate < 50 || input.sessionRate > 5000) {
+    throw new Error("سعر الجلسة يجب أن يكون بين 50 و5000 جنيه");
+  }
+  if (!Number.isFinite(input.packageRate) || input.packageRate < 50 || input.packageRate > 50000) {
+    throw new Error("سعر باقة 8 حصص يجب أن يكون قيمة صحيحة");
   }
 
-  const {error}=await s.from("coaches").update(updateData).eq("id",user.id);
-  if(error) throw new Error(error.message);
+  // Mathematical pricing integrity bounds
+  const singleTotal8 = input.sessionRate * 8;
+  if (input.packageRate >= singleTotal8) {
+    throw new Error(
+      `سعر باقة 8 حصص (${input.packageRate} ج.م) يجب أن يكون أقل من مجموع 8 جلسات فردية (${singleTotal8} ج.م) لتقديم خصم تشجيعي للمتدرب.`
+    );
+  }
+  const minPackageRate = Math.round(input.sessionRate * 4);
+  if (input.packageRate < minPackageRate) {
+    throw new Error(
+      `سعر باقة 8 حصص لا يمكن أن يقل عن نصف قيمة الجلسات (${minPackageRate} ج.م) لضمان أرباحك وتغطية تكاليف التدريب.`
+    );
+  }
+
+  const requestedSports = cleanList(input.sports, 10);
+  if (requestedSports.length === 0) throw new Error("يجب اختيار أو كتابة رياضة واحدة على الأقل");
+  if (requestedSports.some((s) => s.length > 50)) throw new Error("اسم الرياضة يجب ألا يتجاوز 50 حرفاً");
+
+  const locations = cleanList(input.locations, 10);
+  if (locations.length === 0) throw new Error("يجب إضافة مكان تدريب أو محافظة واحدة على الأقل");
+  const languages = cleanList(input.languages.length ? input.languages : ["العربية"], 6);
+
+  const updateData: any = {
+    headline,
+    bio,
+    session_rate: Math.round(input.sessionRate * 100) / 100,
+    package_8_rate: Math.round(input.packageRate * 100) / 100,
+    sports: requestedSports,
+    training_locations: locations,
+    languages,
+  };
+  if (input.cvUrl !== undefined) {
+    updateData.cv_url = input.cvUrl;
+  }
+  if (input.instapayAddress !== undefined) {
+    updateData.instapay_address = input.instapayAddress?.trim() || null;
+  }
+
+  const { error } = await s.from("coaches").update(updateData).eq("id", user.id);
+  if (error) throw new Error(error.message);
 
   revalidatePath("/coach/profile");
   revalidatePath("/coach/dashboard");
   revalidatePath("/coaches");
   revalidatePath(`/coaches/${user.id}`);
-  return {ok:true};
+  return { ok: true };
 }
 
-export async function uploadCoachCv(formData:FormData){
-  const {s,user}=await assertCoach();
-  const file=formData.get("file");
-  if(!(file instanceof File)) throw new Error("يجب اختيار ملف السيرة الذاتية (CV)");
-  if(file.size>10*1024*1024) throw new Error("ملف الـ CV يجب ألا يتجاوز 10 ميجابايت");
+export async function uploadCoachCv(formData: FormData) {
+  const { s, user } = await assertCoach();
+  const file = formData.get("file");
+  if (!(file instanceof File)) throw new Error("يجب اختيار ملف السيرة الذاتية (CV)");
+  if (file.size > 10 * 1024 * 1024) throw new Error("ملف الـ CV يجب ألا يتجاوز 10 ميجابايت");
 
-  const allowedTypes=[
+  const allowedTypes = [
     "application/pdf",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "image/jpeg",
     "image/png",
-    "image/webp"
+    "image/webp",
   ];
-  if(!allowedTypes.includes(file.type)){
+  if (!allowedTypes.includes(file.type)) {
     throw new Error("نوع الملف غير مدعوم. يرجى رفع ملف PDF أو Word أو صورة.");
   }
 
-  const ext=file.name.split(".").pop()||"pdf";
-  const path=`${user.id}/cv_${Date.now()}.${ext}`;
+  const ext = file.name.split(".").pop() || "pdf";
+  const path = `${user.id}/cv_${Date.now()}.${ext}`;
 
-  const {error:uploadError}=await s.storage.from("coach-documents").upload(path,file,{
-    upsert:true,
-    contentType:file.type,
-    cacheControl:"3600"
+  const { error: uploadError } = await s.storage.from("coach-documents").upload(path, file, {
+    upsert: true,
+    contentType: file.type,
+    cacheControl: "3600",
   });
-  if(uploadError) throw new Error(uploadError.message);
+  if (uploadError) throw new Error(uploadError.message);
 
-  const {data}=s.storage.from("coach-documents").getPublicUrl(path);
-  const cvUrl=data.publicUrl;
+  // Generate long-lived signed URL for private bucket
+  const { data: signedData, error: signedError } = await s.storage
+    .from("coach-documents")
+    .createSignedUrl(path, 60 * 60 * 24 * 365);
+  if (signedError) throw new Error(signedError.message);
 
-  const {error:updateError}=await s.from("coaches").update({cv_url:cvUrl}).eq("id",user.id);
-  if(updateError) throw new Error(updateError.message);
+  const cvUrl = signedData?.signedUrl;
+  const { error: updateError } = await s.from("coaches").update({ cv_url: cvUrl }).eq("id", user.id);
+  if (updateError) throw new Error(updateError.message);
 
   revalidatePath("/coach/profile");
   revalidatePath("/coach/dashboard");
-  return {cv_url:cvUrl,fileName:file.name};
+  return { cv_url: cvUrl, fileName: file.name };
 }
 
-export async function deleteCoachCv(){
-  const {s,user}=await assertCoach();
-  const {error}=await s.from("coaches").update({cv_url:null}).eq("id",user.id);
-  if(error) throw new Error(error.message);
+export async function deleteCoachCv() {
+  const { s, user } = await assertCoach();
+  const { error } = await s.from("coaches").update({ cv_url: null }).eq("id", user.id);
+  if (error) throw new Error(error.message);
 
   revalidatePath("/coach/profile");
   revalidatePath("/coach/dashboard");
-  return {ok:true};
+  return { ok: true };
 }
 
 export async function saveCoachAvailability(schedule:AvailabilityBlock[]){

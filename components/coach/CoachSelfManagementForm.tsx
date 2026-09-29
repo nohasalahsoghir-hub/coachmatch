@@ -4,13 +4,16 @@ import { useId, useState, useTransition } from "react";
 import {
   Award,
   CheckCircle2,
+  CreditCard,
   FileCheck,
   FileText,
   FileUp,
   MapPin,
   Save,
+  ShieldCheck,
   Trash2,
   Upload,
+  Wallet,
 } from "lucide-react";
 import { SearchableCombobox } from "@/components/ui/SearchableCombobox";
 import {
@@ -32,6 +35,7 @@ type Initial = {
   languages: string[];
   avatar_url?: string | null;
   cv_url?: string | null;
+  instapay_address?: string | null;
 };
 
 const EGYPT_GOVERNORATES = [
@@ -92,10 +96,38 @@ export function CoachSelfManagementForm({
     new Set([...sports.map((s) => s.name_ar), ...v.sports])
   );
 
+  // Live Math & Pricing Guardrails
+  const sessionFee = Math.round((v.session_rate || 0) * 0.15);
+  const sessionCoachNet = (v.session_rate || 0) - sessionFee;
+
+  const singleTotal8 = (v.session_rate || 0) * 8;
+  const minPackageRate = Math.round((v.session_rate || 0) * 4);
+  const packageFee = Math.round((v.package_8_rate || 0) * 0.15);
+  const packageCoachNet = (v.package_8_rate || 0) - packageFee;
+  const packageUnitNet = Math.round(packageCoachNet / 8);
+
+  const packageDiscountPct =
+    singleTotal8 > 0 && v.package_8_rate < singleTotal8
+      ? Math.round(((singleTotal8 - v.package_8_rate) / singleTotal8) * 100)
+      : 0;
+
+  let packageBoundError = "";
+  if (v.session_rate > 0 && v.package_8_rate > 0) {
+    if (v.package_8_rate >= singleTotal8) {
+      packageBoundError = `سعر الباقة (${v.package_8_rate} ج.م) يجب أن يكون أقل من مجموع 8 جلسات فردية (${singleTotal8} ج.م) لمنح المتدربين خصماً تشجيعياً.`;
+    } else if (v.package_8_rate < minPackageRate) {
+      packageBoundError = `سعر الباقة لا يمكن أن يقل عن نصف قيمة الجلسات (${minPackageRate} ج.م) لحماية أرباحك.`;
+    }
+  }
+
   const save = () =>
     start(async () => {
       setError("");
       setOk(false);
+      if (packageBoundError) {
+        setError(packageBoundError);
+        return;
+      }
       try {
         await updateCoachProfile({
           headline: v.headline,
@@ -106,6 +138,7 @@ export function CoachSelfManagementForm({
           locations: v.training_locations,
           languages: v.languages,
           cvUrl: v.cv_url,
+          instapayAddress: v.instapay_address,
         });
         setOk(true);
       } catch (e) {
@@ -162,13 +195,6 @@ export function CoachSelfManagementForm({
     });
   };
 
-  // Discount calculation for package
-  const singleTotal8 = (v.session_rate || 0) * 8;
-  const packageDiscountPct =
-    singleTotal8 > 0 && v.package_8_rate < singleTotal8
-      ? Math.round(((singleTotal8 - v.package_8_rate) / singleTotal8) * 100)
-      : 0;
-
   return (
     <div className="space-y-6">
       {/* 1. Avatar & Personal Brand */}
@@ -211,7 +237,7 @@ export function CoachSelfManagementForm({
         </div>
       </div>
 
-      {/* 2. CV & Certifications Upload */}
+      {/* 2. CV & Certifications Upload (Secured & Private) */}
       <div className="rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -223,8 +249,12 @@ export function CoachSelfManagementForm({
               توثيق المؤهلات وسنوات الخبرة
             </h3>
             <p className="mt-1 text-xs leading-6 text-[var(--muted)]">
-              ارفع ملف الـ CV أو شهادات التدريب والاتحادات الرياضية لتسريع اعتماد حسابك وظهوره بشارة «مدرب موثّق».
+              ارفع ملف الـ CV أو شهادات التدريب والاتحادات الرياضية لتسريع اعتماد حسابك وتفعيله لاستقبال الحجوزات.
             </p>
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1 text-[11px] text-[var(--muted-2)]">
+              <ShieldCheck size={13} className="text-emerald-400" />
+              <span>مستند محمي ومشفر، متاح فقط لك ولإدارة المنصة لغرض التوثيق والاعتماد.</span>
+            </div>
           </div>
         </div>
 
@@ -238,7 +268,7 @@ export function CoachSelfManagementForm({
                 <div>
                   <p className="text-xs font-bold text-[var(--text)]">تم رفع ملف السيرة الذاتية بنجاح ✓</p>
                   <p className="mt-0.5 text-[11px] text-[var(--muted-2)]">
-                    الملف متاح للمراجعة والتوثيق من إدارة المنصة.
+                    الملف محفوظ بأمان ومتاح لفريق المراجعة لاعتماد وتوثيق الحساب.
                   </p>
                 </div>
               </div>
@@ -325,7 +355,7 @@ export function CoachSelfManagementForm({
         <div>
           <h3 className="text-base font-black text-[var(--text)]">البيانات الأساسية والتسعير</h3>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            حدد المسمى الظاهر للمتدربين، التسعير، والرياضات والمحافظات المتاحة للتدريب.
+            حدد المسمى الظاهر للمتدربين، تسعير الجلسات والباقات، وبيانات استلام مستحقاتك يدويًا.
           </p>
         </div>
 
@@ -346,9 +376,10 @@ export function CoachSelfManagementForm({
           </span>
         </div>
 
-        {/* Pricing Structure */}
+        {/* Pricing Structure with Live Net Take-Home Calculator */}
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-2)] p-4">
+          {/* Single Session Card */}
+          <div className="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-2)] p-4 space-y-3">
             <label className="block text-xs font-bold text-[var(--text)]">
               سعر الجلسة الفردية (ج.م)
             </label>
@@ -358,39 +389,105 @@ export function CoachSelfManagementForm({
               max={5000}
               value={v.session_rate}
               onChange={(e) => update({ session_rate: Number(e.target.value) })}
-              className="field mt-2 w-full text-sm font-black font-mono"
+              className="field w-full text-sm font-black font-mono"
             />
-            <span className="mt-1 block text-[10px] text-[var(--muted-2)]">
-              قيمة الجلسة الواحدة (ساعة تدريبية)
+            {/* Live Net Breakdown */}
+            <div className="rounded-xl border border-[var(--line-soft)] bg-[var(--surface-3)] p-3 text-xs space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] text-[var(--muted-2)]">
+                <span>عمولة المنصة (15%):</span>
+                <span className="font-mono">-{sessionFee} ج.م</span>
+              </div>
+              <div className="flex items-center justify-between pt-1 border-t border-[var(--line-soft)] font-bold text-emerald-400">
+                <span>صافي تحويلك بالإنستاباي:</span>
+                <span className="font-mono text-sm">+{sessionCoachNet} ج.م</span>
+              </div>
+            </div>
+            <span className="block text-[10px] text-[var(--muted-2)]">
+              قيمة الجلسة الواحدة (ساعة تدريبية معتمدة)
             </span>
           </div>
 
-          <div className="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-2)] p-4">
+          {/* Package 8 Sessions Card */}
+          <div className="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-2)] p-4 space-y-3">
             <div className="flex items-center justify-between">
               <label className="block text-xs font-bold text-[var(--text)]">
                 سعر باقة 8 حصص (ج.م)
               </label>
-              {packageDiscountPct > 0 && (
+              {packageDiscountPct > 0 && !packageBoundError && (
                 <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-black text-emerald-400">
-                  خصم {packageDiscountPct}% للمتدرب
+                  توفير {packageDiscountPct}% للمتدرب
                 </span>
               )}
             </div>
             <input
               type="number"
               min={50}
-              max={5000}
+              max={50000}
               value={v.package_8_rate}
               onChange={(e) => update({ package_8_rate: Number(e.target.value) })}
-              className="field mt-2 w-full text-sm font-black font-mono"
+              className={`field w-full text-sm font-black font-mono ${
+                packageBoundError ? "border-rose-500 focus:border-rose-500" : ""
+              }`}
             />
-            <span className="mt-1 block text-[10px] text-[var(--muted-2)]">
-              باقة شهرية تشجع المتدرب على الالتزام والاستمرارية
+            {packageBoundError ? (
+              <p className="rounded-xl bg-rose-500/10 p-2.5 text-[11px] text-rose-300 font-bold leading-5">
+                ⚠️ {packageBoundError}
+              </p>
+            ) : (
+              <div className="rounded-xl border border-[var(--line-soft)] bg-[var(--surface-3)] p-3 text-xs space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] text-[var(--muted-2)]">
+                  <span>عمولة المنصة (15%):</span>
+                  <span className="font-mono">-{packageFee} ج.م</span>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-[var(--line-soft)] font-bold text-emerald-400">
+                  <span>صافي تحويلك بالإنستاباي:</span>
+                  <span className="font-mono text-sm">+{packageCoachNet} ج.م</span>
+                </div>
+                <div className="text-[10px] text-[var(--muted-2)] pt-1 flex justify-between">
+                  <span>صافي الحصة في الباقة:</span>
+                  <span className="font-mono font-bold text-cobalt-300">+{packageUnitNet} ج.م / حصة</span>
+                </div>
+              </div>
+            )}
+            <span className="block text-[10px] text-[var(--muted-2)]">
+              باقة شهرية تشجع المتدرب على الالتزام وتضمن لك دخلاً مستقراً
             </span>
           </div>
         </div>
 
-        {/* 4. Smart Searchable Autocomplete: Sports */}
+        {/* 4. Manual Settlement Details via InstaPay / Mobile Wallet */}
+        <div className="rounded-2xl border border-cobalt-500/20 bg-cobalt-500/5 p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <CreditCard size={18} className="text-cobalt-300" />
+            <h4 className="text-sm font-black text-[var(--text)]">
+              بيانات التحويل والتسوية المالية اليدوية (إنستاباي / محفظة إلكترونية)
+            </h4>
+          </div>
+          <p className="text-xs leading-6 text-[var(--muted)]">
+            عملية تسوية وصرف مستحقاتك تتم يدويًا من إدارة المنصة فور إتمام وتأكيد حضور كل حصة تدريبية، وتُحوّل مباشرة إلى حسابك المسجل هنا (مثل نظام تحويل ودفع المتدربين اليدوي):
+          </p>
+          <div>
+            <label className="block text-xs font-bold text-[var(--muted-2)] mb-1.5">
+              عنوان إنستاباي (InstaPay IPA) أو رقم المحفظة (فودافون كاش / أورنج / اتصالات / وي)
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                dir="ltr"
+                value={v.instapay_address ?? ""}
+                onChange={(e) => update({ instapay_address: e.target.value })}
+                placeholder="example@instapay أو 01012345678"
+                className="field w-full font-mono text-xs pl-3 pr-9"
+              />
+              <Wallet size={15} className="absolute right-3 top-3.5 text-[var(--muted-2)]" />
+            </div>
+            <span className="mt-1.5 block text-[10px] text-[var(--muted-2)]">
+              تأكد من كتابة العنوان أو الرقم بدقة لتجنب أي تأخير في استلام أرباحك بعد انتهاء الحصص.
+            </span>
+          </div>
+        </div>
+
+        {/* 5. Smart Searchable Autocomplete: Sports */}
         <div className="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-2)] p-4">
           <SearchableCombobox
             label="الرياضات والتخصصات (اكتب للبحث أو اختر من القائمة)"
@@ -403,7 +500,7 @@ export function CoachSelfManagementForm({
           />
         </div>
 
-        {/* 5. Smart Searchable Autocomplete: Governorates & Locations */}
+        {/* 6. Smart Searchable Autocomplete: Governorates & Locations */}
         <div className="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-2)] p-4">
           <SearchableCombobox
             label="المحافظات وأماكن التدريب المتاحة (اكتب للبحث أو اختر من القائمة)"
@@ -443,7 +540,7 @@ export function CoachSelfManagementForm({
             onChange={(e) =>
               update({
                 languages: e.target.value
-                  .split("،")
+                  .split(/[،,]/)
                   .map((x) => x.trim())
                   .filter(Boolean),
               })
@@ -468,7 +565,7 @@ export function CoachSelfManagementForm({
 
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || Boolean(packageBoundError)}
           onClick={save}
           className="btn-cobalt min-h-12 w-full text-sm font-black shadow-lg shadow-[var(--cobalt)]/25 transition disabled:opacity-50"
         >
