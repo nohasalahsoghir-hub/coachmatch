@@ -18,7 +18,7 @@ export async function signUp(_prevState: ActionState, formData: FormData): Promi
   const role = String(formData.get("role") ?? "athlete");
   const termsAccepted = formData.get("terms_accepted") === "on";
 
-  if (!email || !password || !confirmPassword || !fullName || !phone) return { error: "من فضلك املأ كل البيانات المطلوبة" };
+  if (!email || !password || !confirmPassword || !fullName || !phone) return { error: "يرجى إدخال جميع البيانات المطلوبة" };
   if (!STRONG_PASSWORD_REGEX.test(password)) return { error: "كلمة المرور لازم تكون 8 أحرف على الأقل وتحتوي على رقم واحد على الأقل" };
   if (password !== confirmPassword) return { error: "كلمتا المرور غير متطابقتين" };
   try {
@@ -27,7 +27,7 @@ export async function signUp(_prevState: ActionState, formData: FormData): Promi
   } catch {
     return { error: "تعذر التحقق من أمان كلمة المرور الآن. يمكن إعادة المحاولة." };
   }
-  if (!termsAccepted) return { error: "لازم توافق على شروط الاستخدام وسياسة الخصوصية قبل إنشاء الحساب" };
+  if (!termsAccepted) return { error: "يجب الموافقة على شروط الاستخدام وسياسة الخصوصية قبل إنشاء الحساب" };
   if (!EGYPT_PHONE_REGEX.test(phone)) return { error: "رقم الهاتف غير صحيح (مثال: 01012345678)" };
   if (role !== "athlete" && role !== "coach") return { error: "نوع الحساب غير صالح" };
 
@@ -50,14 +50,14 @@ export async function signUp(_prevState: ActionState, formData: FormData): Promi
 export async function login(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { error: "اكتب البريد الإلكتروني وكلمة المرور" };
+  if (!email || !password) return { error: "يجب إدخال البريد الإلكتروني وكلمة المرور" };
 
   const s = await createClient();
   const { error } = await s.auth.signInWithPassword({ email, password });
 
   if (error) {
     if (error.code === "email_not_confirmed" || error.message.toLowerCase().includes("email not confirmed")) {
-      return { error: "لم يتم تأكيد البريد الإلكتروني. افتح رسالة التأكيد واضغط على الرابط قبل تسجيل الدخول." };
+      return { error: "لم يتم تأكيد البريد الإلكتروني. يجب تأكيد البريد الإلكتروني من رسالة التأكيد قبل تسجيل الدخول." };
     }
     return { error: "البريد الإلكتروني أو كلمة المرور غير صحيحة" };
   }
@@ -74,7 +74,7 @@ export async function login(_prevState: ActionState, formData: FormData): Promis
 
 export async function requestPasswordReset(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") ?? "").trim();
-  if (!email) return { error: "اكتب بريدك الإلكتروني", submitted: false };
+  if (!email) return { error: "يجب إدخال البريد الإلكتروني", submitted: false };
   const s = await createClient();
   const { error } = await s.auth.resetPasswordForEmail(email, {
     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001"}/auth/callback?next=/auth/reset-password`,
@@ -97,7 +97,7 @@ export async function updatePassword(_prevState: ActionState, formData: FormData
 
   const s = await createClient();
   const { data: { user } } = await s.auth.getUser();
-  if (!user) return { error: "جلسة إعادة التعيين غير صالحة أو انتهت. اطلب رابطًا جديدًا." };
+  if (!user) return { error: "جلسة إعادة التعيين غير صالحة أو انتهت. يمكن طلب رابط جديد." };
   const { error } = await s.auth.updateUser({ password });
   if (error) return { error: error.message };
 
