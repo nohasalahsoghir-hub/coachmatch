@@ -3,23 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { checkPwnedPassword } from "@/lib/security/pwned-password";
 
-type ActionState = { error: string | null };
+type ActionState = { error: string | null; submitted?: boolean };
 const EGYPT_PHONE_REGEX = /^01[0125][0-9]{8}$/;
 const STRONG_PASSWORD_REGEX = /^(?=.*\d).{8,}$/;
-
-async function lookupEmailKind(email: string): Promise<"exists" | "missing" | "unknown"> {
-  try {
-    const admin = createAdminClient();
-    const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    if (error) return "unknown";
-    return data.users.some((u: any) => String(u.email ?? "").toLowerCase() === email.toLowerCase()) ? "exists" : "missing";
-  } catch {
-    return "unknown";
-  }
-}
 
 export async function signUp(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") ?? "").trim();
@@ -53,12 +41,6 @@ export async function signUp(_prevState: ActionState, formData: FormData): Promi
   if (error) return { error: error.message };
   if (!data.user) return { error: "تعذر إنشاء الحساب" };
 
-  if (role === "coach") {
-    const admin = createAdminClient();
-    const { error: coachError } = await admin.from("coaches").upsert({ id: data.user.id }, { onConflict: "id" });
-    if (coachError) return { error: "تم إنشاء الحساب لكن تعذر تجهيز ملف المدرب." };
-  }
-
   revalidatePath("/", "layout");
 
   if (!data.session) redirect(`/auth/verify-email?email=${encodeURIComponent(email)}`);
@@ -77,10 +59,7 @@ export async function login(_prevState: ActionState, formData: FormData): Promis
     if (error.code === "email_not_confirmed" || error.message.toLowerCase().includes("email not confirmed")) {
       return { error: "لم يتم تأكيد البريد الإلكتروني. افتح رسالة التأكيد واضغط على الرابط قبل تسجيل الدخول." };
     }
-    const kind = await lookupEmailKind(email);
-    if (kind === "missing") return { error: "الحساب غير موجود. تأكد من البريد الإلكتروني أو أنشئ حسابًا جديدًا." };
-    if (kind === "exists") return { error: "كلمة المرور غير صحيحة. جرّب مرة أخرى أو استخدم «نسيت كلمة المرور»." };
-    return { error: "تعذر التحقق من بيانات الدخول الآن. حاول مرة أخرى." };
+    return { error: "البريد الإلكتروني أو كلمة المرور غير صحيحة" };
   }
 
   const { data: { user } } = await s.auth.getUser();
@@ -89,20 +68,19 @@ export async function login(_prevState: ActionState, formData: FormData): Promis
   const { data: profile } = await s.from("profiles").select("role").eq("id", user.id).maybeSingle();
   revalidatePath("/", "layout");
 
-  if (profile?.role === "admin") redirect("/admin");
   if (profile?.role === "coach") redirect("/coach/dashboard");
   redirect("/dashboard");
 }
 
 export async function requestPasswordReset(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") ?? "").trim();
-  if (!email) return { error: "اكتب بريدك الإلكتروني" };
+  if (!email) return { error: "اكتب بريدك الإلكتروني", submitted: false };
   const s = await createClient();
   const { error } = await s.auth.resetPasswordForEmail(email, {
     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001"}/auth/callback?next=/auth/reset-password`,
   });
-  if (error) return { error: error.message };
-  return { error: null };
+  if (error) return { error: error.message, submitted: false };
+  return { error: null, submitted: true };
 }
 
 export async function updatePassword(_prevState: ActionState, formData: FormData): Promise<ActionState> {

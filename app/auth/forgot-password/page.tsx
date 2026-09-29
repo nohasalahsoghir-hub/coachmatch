@@ -4,11 +4,11 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { requestPasswordReset } from "@/app/auth/actions";
 
-const initialState = { error: null as string | null };
+const initialState = { error: null as string | null, submitted: false };
 
 export default function ForgotPasswordPage() {
   const [state, formAction, pending] = useActionState(requestPasswordReset, initialState);
-  const sent = state.error === null;
+  const sent = Boolean(state.submitted);
 
   return (
     <main dir="rtl" className="mx-auto flex min-h-[70vh] max-w-md items-center px-4 py-10">
@@ -19,14 +19,10 @@ export default function ForgotPasswordPage() {
           البريد الإلكتروني
           <input name="email" type="email" required className="field mt-2 w-full" autoComplete="email" />
         </label>
-        <button disabled={pending} className="btn-cobalt mt-4 w-full">
-          {pending ? "جارٍ الإرسال..." : "إرسال رابط إعادة التعيين"}
-        </button>
+        <button disabled={pending} className="btn-cobalt mt-4 w-full">{pending ? "جارٍ الإرسال..." : "إرسال رابط إعادة التعيين"}</button>
         {state.error && <p role="alert" className="mt-3 rounded-2xl bg-red-500/10 p-3 text-sm text-red-200">{state.error}</p>}
-        {sent && !pending && <p className="mt-3 rounded-2xl bg-teal-500/10 p-3 text-sm text-teal-200">لو البريد مسجل، هتوصلك رسالة إعادة التعيين. راجعي Inbox وSpam.</p>}
-        <p className="mt-5 text-center text-sm text-[var(--muted)]">
-          <Link href="/auth/login" className="font-bold text-cobalt-300">العودة لتسجيل الدخول</Link>
-        </p>
+        {sent && !pending && <p role="status" className="mt-3 rounded-2xl bg-teal-500/10 p-3 text-sm text-teal-200">لو البريد مسجل، هتوصلك رسالة إعادة التعيين. راجعي Inbox وSpam.</p>}
+        <p className="mt-5 text-center text-sm text-[var(--muted)]"><Link href="/auth/login" className="font-bold text-cobalt-300">العودة لتسجيل الدخول</Link></p>
       </form>
     </main>
   );

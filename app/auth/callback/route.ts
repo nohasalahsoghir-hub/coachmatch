@@ -7,14 +7,14 @@ export async function GET(request: Request) {
   const next = url.searchParams.get("next") === "/auth/reset-password" ? "/auth/reset-password" : "/dashboard";
 
   if (!code) {
-    return NextResponse.redirect(new URL("/auth/login?error=callback", url.origin));
+    return NextResponse.redirect(new URL(next === "/auth/reset-password" ? "/auth/login?error=reset-link" : "/auth/login?error=callback", url.origin));
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
-    return NextResponse.redirect(new URL("/auth/login?error=callback", url.origin));
+    return NextResponse.redirect(new URL(next === "/auth/reset-password" ? "/auth/login?error=reset-link" : "/auth/login?error=callback", url.origin));
   }
 
   return NextResponse.redirect(new URL(next, url.origin));

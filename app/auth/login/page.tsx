@@ -1,61 +1,39 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { login } from "@/app/auth/actions";
 
 export default function LoginPage() {
-  const [state, formAction, pending] = useActionState(login, { error: null });
+  const [state, formAction, pending] = useActionState(login, { error: null, submitted: false });
+  const [linkMessage, setLinkMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("error") === "reset-link") setLinkMessage("الرابط انتهت صلاحيته أو لم يعد صالحًا. اطلبي رابطًا جديدًا لإعادة تعيين كلمة المرور.");
+    if (params.get("reset") === "success") setLinkMessage("تم تغيير كلمة المرور بنجاح. يمكنك تسجيل الدخول الآن.");
+  }, []);
 
   return (
-    <div dir="rtl" className="flex min-h-screen items-center justify-center bg-neutral-950 px-4">
-      <form
-        action={formAction}
-        className="w-full max-w-sm space-y-4 rounded-2xl bg-neutral-900 p-6 shadow-xl"
-      >
-        <h1 className="text-2xl font-bold text-white">تسجيل الدخول</h1>
-
-        <div className="space-y-1">
-          <label className="text-sm text-neutral-400">البريد الإلكتروني</label>
-          <input
-            name="email"
-            type="email"
-            required
-            className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-white outline-none focus:border-emerald-500"
-          />
+    <main dir="rtl" className="mx-auto flex min-h-[70vh] items-center justify-center px-4 py-10">
+      <form action={formAction} className="w-full max-w-sm rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-6 shadow-xl">
+        <h1 className="text-2xl font-black text-[var(--text)]">تسجيل الدخول</h1>
+        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">ادخلي لحسابك وكمّلي رحلتك مع CoachMatch.</p>
+        <label className="mt-5 block text-sm font-bold text-[var(--text)]">
+          البريد الإلكتروني
+          <input name="email" type="email" required className="field mt-2 w-full" autoComplete="email" />
+        </label>
+        <label className="mt-4 block text-sm font-bold text-[var(--text)]">
+          كلمة المرور
+          <input name="password" type="password" required className="field mt-2 w-full" autoComplete="current-password" />
+        </label>
+        <div className="mt-2 flex justify-end">
+          <Link href="/auth/forgot-password" className="text-xs font-bold text-cobalt-300 hover:underline">نسيت كلمة المرور؟</Link>
         </div>
-
-        <div className="space-y-1">
-          <label className="text-sm text-neutral-400">كلمة المرور</label>
-          <input
-            name="password"
-            type="password"
-            required
-            className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-white outline-none focus:border-emerald-500"
-          />
-        </div>
-
-        {state.error && (
-          <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm leading-6 text-red-300">
-            {state.error}
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full rounded-lg bg-emerald-600 py-2 font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
-        >
-          {pending ? "جارٍ الدخول..." : "دخول"}
-        </button>
-
-        <p className="text-center text-sm text-neutral-400">
-          مالك حساب؟{" "}
-          <Link href="/auth/sign-up" className="text-emerald-400">
-            سجّل الآن
-          </Link>
-        </p>
+        {linkMessage && <div role="status" className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm leading-6 text-amber-100">{linkMessage}</div>}\n        {state.error && <div role="alert" className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm leading-6 text-red-300">{state.error}</div>}
+        <button type="submit" disabled={pending} className="btn-cobalt mt-4 w-full">{pending ? "جارٍ الدخول..." : "دخول"}</button>
+        <p className="mt-5 text-center text-sm text-[var(--muted)]">مالك حساب؟{" "}<Link href="/auth/sign-up" className="font-bold text-cobalt-300">سجّل الآن</Link></p>
       </form>
-    </div>
+    </main>
   );
 }
