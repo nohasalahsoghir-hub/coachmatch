@@ -35,7 +35,7 @@ export default function PrivacyPage() {
 
         <section className="space-y-3">
           <h2 className="text-lg font-black">طلبات الخصوصية والحذف</h2>
-          <p className="leading-8 text-sm text-[var(--muted)]">لطلب الوصول إلى بياناتك أو تصحيحها أو حذفها، استخدمي وسيلة التواصل الرسمية المعتمدة من CoachMatch والمعلنة مع إطلاق الخدمة. لاستفسارات الخصوصية أو طلبات الوصول والتصحيح والحذف، استخدمي قناة التواصل الرسمية للمشروع عبر GitHub Issues: <a href="https://github.com/nohasalahsoghir-hub/coachmatch/issues" target="_blank" rel="noreferrer" className="font-bold text-cobalt-300 hover:underline">صفحة التواصل والشكاوى</a>. لا ترسلي بيانات حساسة أو كلمات مرور داخل البلاغ.</p>
+          <p className="leading-8 text-sm text-[var(--muted)]">لطلب الوصول إلى بياناتك أو تصحيحها أو حذفها، يمكن استخدام وسيلة التواصل الرسمية المعتمدة من CoachMatch والمعلنة مع إطلاق الخدمة. لاستفسارات الخصوصية أو طلبات الوصول والتصحيح والحذف، يمكن استخدام قناة التواصل الرسمية للمشروع عبر GitHub Issues: <a href="https://github.com/nohasalahsoghir-hub/coachmatch/issues" target="_blank" rel="noreferrer" className="font-bold text-cobalt-300 hover:underline">صفحة التواصل والشكاوى</a>. يُرجى عدم إرسال بيانات حساسة أو كلمات مرور داخل البلاغ.</p>
         </section>
       </article>
     </main>

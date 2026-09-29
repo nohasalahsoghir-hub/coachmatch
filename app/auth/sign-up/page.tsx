@@ -20,7 +20,7 @@ export default function SignUpPage() {
       <form action={formAction} className="w-full space-y-4 rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-6 shadow-xl">
         <div>
           <h1 className="text-2xl font-black text-[var(--text)]">إنشاء حساب جديد</h1>
-          <p className="mt-1 text-sm text-[var(--muted)]">ابدئي رحلتك مع CoachMatch.</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">رحلة جديدة تبدأ مع CoachMatch.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
@@ -35,7 +35,7 @@ export default function SignUpPage() {
 
         {role === "coach" && (
           <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm leading-6 text-amber-200">
-            حسابك هيتراجع من فريقنا قبل ما يظهر للمتدربين — هنكلمك خلال 3 أيام.
+            سيتم مراجعة الحساب قبل ظهوره للمتدربين — وسيتم التواصل خلال 3 أيام.
           </div>
         )}
 
@@ -81,7 +81,7 @@ export default function SignUpPage() {
         </button>
 
         <p className="text-center text-sm text-[var(--muted)]">
-          عندك حساب بالفعل؟ <Link href="/auth/login" className="font-bold text-cobalt-300">سجّلي الدخول</Link>
+          لديك حساب بالفعل؟ <Link href="/auth/login" className="font-bold text-cobalt-300">تسجيل الدخول</Link>
         </p>
       </form>
     </main>

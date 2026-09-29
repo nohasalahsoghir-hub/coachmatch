@@ -46,20 +46,20 @@ export async function updateCoachProfile(input:{
   const {s,user}=await assertCoach();
   const headline=input.headline.trim();
   const bio=input.bio.trim();
-  if(!headline || headline.length>120) throw new Error("اكتبي عنوانًا بين حرف واحد و120 حرفًا");
+  if(!headline || headline.length>120) throw new Error("يجب إدخال عنوان بين حرف واحد و120 حرفًا");
   if(!bio || bio.length>2500) throw new Error("النبذة مطلوبة وبحد أقصى 2500 حرف");
   if(!Number.isFinite(input.sessionRate)||input.sessionRate<50||input.sessionRate>5000) throw new Error("سعر الجلسة يجب أن يكون بين 50 و5000 جنيه");
   if(!Number.isFinite(input.packageRate)||input.packageRate<50||input.packageRate>5000) throw new Error("سعر باقة 8 حصص يجب أن يكون بين 50 و5000 جنيه");
 
   const requestedSports=cleanList(input.sports,8);
-  if(requestedSports.length===0) throw new Error("اختاري رياضة واحدة على الأقل");
+  if(requestedSports.length===0) throw new Error("يجب اختيار رياضة واحدة على الأقل");
   const {data:sportRows,error:sportError}=await s.from("sports").select("name_ar").eq("is_active",true);
   if(sportError) throw new Error(sportError.message);
   const allowed=new Set((sportRows??[]).map(x=>x.name_ar));
-  if(requestedSports.some(x=>!allowed.has(x))) throw new Error("اختاري الرياضات من قائمة المنصة فقط");
+  if(requestedSports.some(x=>!allowed.has(x))) throw new Error("يجب اختيار الرياضات من قائمة المنصة فقط");
 
   const locations=cleanList(input.locations,8);
-  if(locations.length===0) throw new Error("أضيفي مكان تدريب واحد على الأقل");
+  if(locations.length===0) throw new Error("يجب إضافة مكان تدريب واحد على الأقل");
   const languages=cleanList(input.languages.length?input.languages:["العربية"],6);
 
   const {error}=await s.from("coaches").update({
@@ -115,7 +115,7 @@ export async function saveCoachAvailability(schedule:AvailabilityBlock[]){
 export async function uploadCoachAvatar(formData:FormData){
   const {s,user}=await assertCoach();
   const file=formData.get("file");
-  if(!(file instanceof File)) throw new Error("اختاري صورة");
+  if(!(file instanceof File)) throw new Error("يجب اختيار صورة");
   if(file.size>5*1024*1024) throw new Error("الصورة يجب ألا تتجاوز 5 ميجابايت");
   if(!["image/jpeg","image/png","image/webp"].includes(file.type)) throw new Error("الصورة يجب أن تكون JPG أو PNG أو WebP");
 

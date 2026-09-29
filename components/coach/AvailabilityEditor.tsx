@@ -21,7 +21,7 @@ export function AvailabilityEditor({initial}:{initial:Block[]}){
     catch(e){setError(e instanceof Error?e.message:"تعذر حفظ الجدول");}
   });
   return <div className="rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-5 space-y-6">
-    <div><p className="font-black">الجدول الأسبوعي</p><p className="mt-2 text-xs leading-6 text-[var(--muted-2)]">أضيفي فترة أو أكثر لكل يوم. المواعيد العامة تُحسب تلقائيًا من هنا.</p></div>
+    <div><p className="font-black">الجدول الأسبوعي</p><p className="mt-2 text-xs leading-6 text-[var(--muted-2)]">يمكن إضافة فترة أو أكثر لكل يوم، وتُحسب المواعيد العامة تلقائيًا من الجدول.</p></div>
     <div className="space-y-4">
       {DAYS.map((label,day)=>{
         const dayBlocks=blocks.map((b,i)=>({b,i})).filter(x=>x.b.day===day);

@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     locale: "ar_EG",
     siteName: "CoachMatch",
     title: "CoachMatch | اكتشف مدربك",
-    description: "اكتشفي مدربك واحجزي جلستك بسهولة.",
+    description: "اكتشاف المدرب وحجز الجلسة بسهولة.",
   },
 };
 

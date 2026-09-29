@@ -10,7 +10,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("error") === "reset-link") setLinkMessage("الرابط انتهت صلاحيته أو لم يعد صالحًا. اطلبي رابطًا جديدًا لإعادة تعيين كلمة المرور.");
+    if (params.get("error") === "reset-link") setLinkMessage("الرابط انتهت صلاحيته أو لم يعد صالحًا. يمكن طلب رابط جديد لإعادة تعيين كلمة المرور.");
     if (params.get("reset") === "success") setLinkMessage("تم تغيير كلمة المرور بنجاح. يمكنك تسجيل الدخول الآن.");
   }, []);
 
