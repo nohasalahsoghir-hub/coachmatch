@@ -34,7 +34,7 @@ select s.id,
   true,
   gs.n <> 3,
   true
-from public.sports s
+from (select * from public.sports where is_active=true order by sort_order limit 5) s
 cross join generate_series(1,4) gs(n);
 
 insert into public.demo_coach_availability
@@ -61,7 +61,7 @@ from ranked r
 join public.demo_coaches c on c.id = (
   select id from public.demo_coaches
   order by id
-  limit 1 offset ((r.rn - 1) % 120)
+  limit 1 offset ((r.rn - 1) % 20)
 );
 
 with ranked as (
@@ -74,7 +74,7 @@ chosen as (
   join public.demo_coaches c on c.id = (
     select id from public.demo_coaches
     order by id
-    limit 1 offset ((r.rn - 1) % 120)
+    limit 1 offset ((r.rn - 1) % 20)
   )
 )
 insert into public.demo_bookings
