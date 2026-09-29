@@ -4,17 +4,13 @@ import { useMemo, useState } from "react";
 import {
   AlertTriangle,
   CalendarCheck,
-  CheckCircle2,
-  Clock,
-  Dumbbell,
   MessageCircle,
   Package,
   Phone,
   Search,
-  Sparkles,
-  UserCheck,
   Users,
 } from "lucide-react";
+import { formatWhatsAppNumber } from "@/components/coach/BookingRow";
 
 export interface TraineeItem {
   athleteId: string;
@@ -34,9 +30,9 @@ export function TraineeRosterHub({ trainees }: { trainees: TraineeItem[] }) {
   const [filter, setFilter] = useState<"all" | "active_packages" | "expiring_soon">("all");
   const [search, setSearch] = useState("");
 
-  // Expiring packages (1 session remaining)
+  // Expiring or exhausted packages (1 or 0 sessions remaining)
   const expiringCount = useMemo(
-    () => trainees.filter((t) => t.packageId && t.remainingSessions === 1).length,
+    () => trainees.filter((t) => t.packageId && t.remainingSessions <= 1).length,
     [trainees]
   );
 
@@ -49,56 +45,59 @@ export function TraineeRosterHub({ trainees }: { trainees: TraineeItem[] }) {
     return trainees.filter((t) => {
       // Tab filter
       if (filter === "active_packages" && (!t.packageId || t.remainingSessions <= 0)) return false;
-      if (filter === "expiring_soon" && (!t.packageId || t.remainingSessions !== 1)) return false;
+      if (filter === "expiring_soon" && (!t.packageId || t.remainingSessions > 1)) return false;
 
       // Text search
       if (search.trim()) {
         const q = search.trim().toLowerCase();
-        const matchesName = t.athleteName.toLowerCase().includes(q);
-        const matchesPhone = t.athletePhone.includes(q);
+        const matchesName = (t.athleteName || "").toLowerCase().includes(q);
+        const matchesPhone = (t.athletePhone || "").includes(q);
         if (!matchesName && !matchesPhone) return false;
       }
       return true;
     });
   }, [trainees, filter, search]);
 
-  const makeWhatsAppUrl = (phone: string, name: string, remaining: number) => {
-    const cleanPhone = phone.replace(/\D/g, "").replace(/^0/, "");
-    if (!cleanPhone) return "";
+  const makeWhatsAppUrl = (phone: string, name: string, remaining: number, hasPackage: boolean) => {
+    const waNum = formatWhatsAppNumber(phone);
+    if (!waNum) return "";
+
     let msg = "";
-    if (remaining === 1) {
-      msg = `أهلاً يا ${name} 👋 حبيت أفكرك إنه متبقي لك حصة تدريبية واحدة فقط في باقتك الحالية. تحب ننسق ونجدد باقة الشهر الجديد ونحجز مواعيدك المفضلة قبل ما تكتمل المواعيد؟ 💪`;
-    } else if (remaining > 1) {
+    if (hasPackage && remaining === 0) {
+      msg = `أهلاً يا ${name} 👋 حبيت أطمن عليك، باقتك التدريبية السابقة اكتملت بالكامل. تحب ننسق ونجدد باقة الشهر الجديد ونحجز مواعيدك المفضلة قبل ما تكتمل المواعيد؟ 💪`;
+    } else if (hasPackage && remaining === 1) {
+      msg = `أهلاً يا ${name} 👋 حبيت أفكرك إنه متبقي لك آخر حصة تدريبية في باقتك الحالية. تحب ننسق باقة التجديد ونضمن جدولك للشهر القادم؟ 💪`;
+    } else if (hasPackage && remaining > 1) {
       msg = `أهلاً يا ${name} 👋 متابع معاك تمرينك، متبقي لك ${remaining} حصص في باقتك الحالية. جاهز للحصة الجاية؟ 💪`;
     } else {
-      msg = `أهلاً يا ${name} 👋 بتمنى تمرينك يكون ماشي ممتاز، تحب نحجز موعد تدريب جديد هذا الأسبوع؟ 💪`;
+      msg = `أهلاً يا ${name} 👋 بتمنى تمرينك يكون ماشي ممتاز، تحب نحجز جلسة تدريب جديدة هذا الأسبوع؟ 💪`;
     }
-    return `https://wa.me/20${cleanPhone}?text=${encodeURIComponent(msg)}`;
+    return `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
   };
 
   return (
     <div className="space-y-4">
-      {/* Smart Renewal Alert Banner if any package is expiring */}
+      {/* Smart Renewal Alert Banner if any package is expiring or exhausted */}
       {expiringCount > 0 && (
         <div className="rounded-3xl border border-amber-400/25 bg-amber-400/10 p-5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-amber-400/20 text-amber-300">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-400/20 text-amber-300">
                 <AlertTriangle size={20} />
               </div>
               <div>
                 <h4 className="text-sm font-black text-amber-200">
-                  تنبيه تجديد باقة ({expiringCount} متدربين متبقي لهم حصة واحدة)
+                  تنبيه تجديد باقة ({expiringCount} متدربين متبقي لهم حصة واحدة أو انتهت باقتهم)
                 </h4>
-                <p className="mt-0.5 text-xs text-amber-100/75 leading-5">
-                  تواصل معهم الآن لتأكيد باقة الشهر الجديد وحجز مواعيدهم قبل أن يملأ متدربون آخرون أوقاتك الشاغرة.
+                <p className="mt-0.5 text-xs text-amber-100/80 leading-5">
+                  تواصل معهم الآن لتأكيد اشتراك الشهر الجديد وحجز مواعيدهم قبل أن يملأ متدربون آخرون أوقاتك الشاغرة.
                 </p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => setFilter("expiring_soon")}
-              className="shrink-0 rounded-xl bg-amber-400 px-4 py-2 text-xs font-black text-black transition hover:bg-amber-300 shadow-md shadow-amber-400/20"
+              className="shrink-0 min-h-11 rounded-xl bg-amber-400 px-4 text-xs font-black text-black transition hover:bg-amber-300 shadow-md shadow-amber-400/20 active:scale-[0.98]"
             >
               عرض المتدربين للتجديد ({expiringCount})
             </button>
@@ -113,7 +112,7 @@ export function TraineeRosterHub({ trainees }: { trainees: TraineeItem[] }) {
           <button
             type="button"
             onClick={() => setFilter("all")}
-            className={`min-h-10 rounded-xl px-4 text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`min-h-11 rounded-xl px-4 text-xs font-bold transition flex items-center gap-1.5 ${
               filter === "all"
                 ? "bg-[var(--cobalt)] text-white shadow-md shadow-[var(--cobalt)]/25"
                 : "text-[var(--muted)] hover:text-white"
@@ -127,7 +126,7 @@ export function TraineeRosterHub({ trainees }: { trainees: TraineeItem[] }) {
           <button
             type="button"
             onClick={() => setFilter("active_packages")}
-            className={`min-h-10 rounded-xl px-4 text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`min-h-11 rounded-xl px-4 text-xs font-bold transition flex items-center gap-1.5 ${
               filter === "active_packages"
                 ? "bg-[var(--cobalt)] text-white shadow-md shadow-[var(--cobalt)]/25"
                 : "text-[var(--muted)] hover:text-white"
@@ -142,14 +141,14 @@ export function TraineeRosterHub({ trainees }: { trainees: TraineeItem[] }) {
           <button
             type="button"
             onClick={() => setFilter("expiring_soon")}
-            className={`min-h-10 rounded-xl px-4 text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`min-h-11 rounded-xl px-4 text-xs font-bold transition flex items-center gap-1.5 ${
               filter === "expiring_soon"
                 ? "bg-amber-400 text-black shadow-md shadow-amber-400/25 font-black"
                 : "text-amber-300 hover:text-amber-200"
             }`}
           >
             <AlertTriangle size={13} />
-            <span>أوشكت على الانتهاء</span>
+            <span>تحتاج تجديد</span>
             <span className="rounded-full bg-black/15 px-1.5 py-0.5 text-[10px] tabular font-mono">
               {expiringCount}
             </span>
@@ -157,46 +156,55 @@ export function TraineeRosterHub({ trainees }: { trainees: TraineeItem[] }) {
         </div>
 
         {/* Search */}
-        <div className="relative min-w-[220px]">
-          <Search size={14} className="absolute right-3.5 top-3.5 text-[var(--muted-2)]" />
+        <div className="relative min-w-[240px]">
+          <Search size={15} className="absolute right-3.5 top-3.5 text-[var(--muted-2)] pointer-events-none" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="بحث بالاسم أو الهاتف..."
-            className="min-h-10 w-full rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] pr-9 pl-3 text-xs text-[var(--text)] outline-none focus:border-[var(--cobalt)]"
+            className="min-h-11 w-full rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] pr-10 pl-3 text-xs text-[var(--text)] outline-none transition focus:border-[var(--cobalt)]"
           />
         </div>
       </div>
 
       {/* Trainees Cards Grid */}
       {filtered.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           {filtered.map((t) => {
             const completedCount = t.totalSessions - t.remainingSessions;
             const pct =
               t.totalSessions > 0
-                ? Math.round((completedCount / t.totalSessions) * 100)
+                ? Math.min(100, Math.max(0, Math.round((completedCount / t.totalSessions) * 100)))
                 : 100;
-            const waUrl = makeWhatsAppUrl(t.athletePhone, t.athleteName, t.remainingSessions);
+            const waUrl = makeWhatsAppUrl(
+              t.athletePhone,
+              t.athleteName,
+              t.remainingSessions,
+              Boolean(t.packageId)
+            );
 
             return (
               <div
                 key={t.athleteId}
                 className="relative overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-5 transition hover:border-[var(--cobalt)]/40"
               >
-                {/* Header: Name, Status Badge, and WhatsApp */}
+                {/* Header: Name, Phone, and WhatsApp */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[rgba(62,111,242,0.1)] text-base font-black text-[var(--cobalt)]">
+                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[rgba(62,111,242,0.12)] text-base font-black text-cobalt-300">
                       {t.athleteName.slice(0, 1) || "م"}
                     </div>
                     <div>
-                      <h4 className="font-black text-sm text-[var(--text)]">{t.athleteName}</h4>
-                      <div className="mt-1 flex items-center gap-1.5 text-xs text-[var(--muted-2)] font-mono" dir="ltr">
-                        <Phone size={11} />
-                        <span>{t.athletePhone}</span>
-                      </div>
+                      <h4 className="font-extrabold text-sm text-[var(--text)]">{t.athleteName}</h4>
+                      {t.athletePhone && !t.athletePhone.startsWith("seed-") ? (
+                        <div className="mt-1 flex items-center gap-1.5 text-xs text-[var(--muted-2)] font-mono" dir="ltr">
+                          <Phone size={11} />
+                          <span>{t.athletePhone}</span>
+                        </div>
+                      ) : (
+                        <span className="mt-1 text-[11px] text-[var(--muted-2)] block">متدرب مسجل حديثاً</span>
+                      )}
                     </div>
                   </div>
 
@@ -206,38 +214,39 @@ export function TraineeRosterHub({ trainees }: { trainees: TraineeItem[] }) {
                       href={waUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/20 shadow-sm"
+                      className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3.5 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/20 shadow-sm"
                       title="مراسلة سريعة عبر واتساب"
+                      aria-label={`مراسلة ${t.athleteName} عبر واتساب`}
                     >
-                      <MessageCircle size={14} />
+                      <MessageCircle size={15} />
                       <span className="hidden sm:inline">واتساب</span>
                     </a>
                   )}
                 </div>
 
                 {/* Package Progress Section */}
-                <div className="mt-4 rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-2)] p-3.5 text-xs space-y-2">
+                <div className="mt-4 rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-2)] p-4 text-xs space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="inline-flex items-center gap-1.5 font-bold text-[var(--muted)]">
                       <Package size={13} className="text-[var(--cobalt)]" />
                       {t.packageId ? "باقة تدريب 8 حصص" : "حجز جلسات فردية"}
                     </span>
                     {t.packageId ? (
-                      t.remainingSessions === 1 ? (
-                        <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-black text-amber-300 animate-pulse">
+                      t.remainingSessions === 0 ? (
+                        <span className="rounded-full bg-rose-500/15 px-2.5 py-0.5 text-[10px] font-black text-rose-300">
+                          اكتملت (تحتاج تجديد)
+                        </span>
+                      ) : t.remainingSessions === 1 ? (
+                        <span className="rounded-full bg-amber-400/15 px-2.5 py-0.5 text-[10px] font-black text-amber-300 animate-pulse">
                           متبقي حصة واحدة (تجديد)
                         </span>
-                      ) : t.remainingSessions > 0 ? (
-                        <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-black text-emerald-300">
-                          متبقي {t.remainingSessions} حصص
-                        </span>
                       ) : (
-                        <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-[var(--muted-2)]">
-                          مكتملة
+                        <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-black text-emerald-300">
+                          متبقي {t.remainingSessions} حصص
                         </span>
                       )
                     ) : (
-                      <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-[var(--muted-2)]">
+                      <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-[10px] text-[var(--muted-2)]">
                         {t.totalBookingsCompleted} جلسات منجزة
                       </span>
                     )}
@@ -249,7 +258,7 @@ export function TraineeRosterHub({ trainees }: { trainees: TraineeItem[] }) {
                       <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--surface-3)]">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${
-                            t.remainingSessions === 1
+                            t.remainingSessions <= 1
                               ? "bg-amber-400"
                               : "bg-[var(--cobalt)]"
                           }`}
@@ -257,7 +266,7 @@ export function TraineeRosterHub({ trainees }: { trainees: TraineeItem[] }) {
                         />
                       </div>
                       <div className="mt-1.5 flex justify-between text-[10px] text-[var(--muted-2)] font-mono">
-                        <span>أُنجز {completedCount} من {t.totalSessions}</span>
+                        <span>أُنجز {completedCount} من {t.totalSessions} حصة</span>
                         <span>معدل الإنجاز {pct}%</span>
                       </div>
                     </div>
@@ -265,17 +274,17 @@ export function TraineeRosterHub({ trainees }: { trainees: TraineeItem[] }) {
                 </div>
 
                 {/* Session Lifecycle Footnote */}
-                <div className="mt-3 flex items-center justify-between text-[11px] text-[var(--muted-2)] pt-2 border-t border-[var(--line-soft)]">
+                <div className="mt-3.5 flex items-center justify-between text-[11px] text-[var(--muted-2)] pt-2.5 border-t border-[var(--line-soft)]">
                   <span className="inline-flex items-center gap-1">
                     <CalendarCheck size={12} className="text-cobalt-300" />
-                    <span>إجمالي الجلسات: <b>{t.totalBookingsCompleted}</b></span>
+                    <span>الجلسات المنجزة: <b className="text-[var(--text)] font-mono">{t.totalBookingsCompleted}</b></span>
                   </span>
                   {t.nextSessionDate ? (
-                    <span className="text-emerald-400 font-bold">
-                      الموعد القادم: {t.nextSessionDate}
+                    <span className="text-emerald-400 font-bold font-mono">
+                      القادم: {t.nextSessionDate}
                     </span>
                   ) : (
-                    <span className="text-[var(--muted-2)]">لا يوجد موعد قادم مجدول</span>
+                    <span className="text-[var(--muted-2)]">لا يوجد موعد قادم</span>
                   )}
                 </div>
               </div>
@@ -287,9 +296,9 @@ export function TraineeRosterHub({ trainees }: { trainees: TraineeItem[] }) {
           <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[var(--surface-2)] text-[var(--muted-2)]">
             <Users size={22} />
           </div>
-          <h4 className="mt-3 text-sm font-black text-[var(--text)]">لا يوجد متدربين مطابقين للبحث</h4>
+          <h4 className="mt-3 text-sm font-black text-[var(--text)]">لا يوجد متدربين في هذا التصنيف</h4>
           <p className="mt-1 text-xs text-[var(--muted-2)]">
-            يمكنك مسح الفلتر أو محرك البحث لعرض جميع المتدربين المسجلين معك.
+            يمكنك مسح الفلتر أو كلمة البحث لعرض كافة المتدربين المسجلين معك.
           </p>
           {(filter !== "all" || search) && (
             <button
@@ -298,7 +307,7 @@ export function TraineeRosterHub({ trainees }: { trainees: TraineeItem[] }) {
                 setFilter("all");
                 setSearch("");
               }}
-              className="mt-3 inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--line)] px-4 text-xs font-bold text-[var(--cobalt)] hover:bg-white/5"
+              className="mt-3.5 inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--line)] px-4 text-xs font-bold text-cobalt-300 hover:bg-white/5 transition"
             >
               عرض كل المتدربين
             </button>
