@@ -1,11 +1,18 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { login } from "@/app/auth/actions";
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(login, { error: null, submitted: false });
+  const [linkMessage, setLinkMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("error") === "reset-link") setLinkMessage("الرابط انتهت صلاحيته أو لم يعد صالحًا. اطلبي رابطًا جديدًا لإعادة تعيين كلمة المرور.");
+    if (params.get("reset") === "success") setLinkMessage("تم تغيير كلمة المرور بنجاح. يمكنك تسجيل الدخول الآن.");
+  }, []);
 
   return (
     <main dir="rtl" className="mx-auto flex min-h-[70vh] items-center justify-center px-4 py-10">
@@ -23,7 +30,7 @@ export default function LoginPage() {
         <div className="mt-2 flex justify-end">
           <Link href="/auth/forgot-password" className="text-xs font-bold text-cobalt-300 hover:underline">نسيت كلمة المرور؟</Link>
         </div>
-        {state.error && <div role="alert" className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm leading-6 text-red-300">{state.error}</div>}
+        {linkMessage && <div role="status" className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm leading-6 text-amber-100">{linkMessage}</div>}\n        {state.error && <div role="alert" className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm leading-6 text-red-300">{state.error}</div>}
         <button type="submit" disabled={pending} className="btn-cobalt mt-4 w-full">{pending ? "جارٍ الدخول..." : "دخول"}</button>
         <p className="mt-5 text-center text-sm text-[var(--muted)]">مالك حساب؟{" "}<Link href="/auth/sign-up" className="font-bold text-cobalt-300">سجّل الآن</Link></p>
       </form>
