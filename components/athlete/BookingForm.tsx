@@ -100,22 +100,22 @@ export function BookingForm({
     });
 
   return (
-    <div className="rounded-[2.5rem] border border-white/10 bg-[var(--surface)] p-6 shadow-xl">
-      <div className="flex items-center gap-2 text-xs font-bold text-amber-300">
+    <div className="surface shadow-xl">
+      <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
         <ShieldCheck size={16} />
-        <span>المواعيد المعروضة متاحة ومحدثة لحظياً</span>
+        <span>المواعيد المعروضة متاحة ومحدثة لحظياً · ضمان استرداد فوري 100%</span>
       </div>
 
       {!availability.length ? (
-        <div className="mt-5 rounded-2xl border border-dashed border-white/10 p-7 text-center text-sm text-[#73877e]">
+        <div className="mt-5 rounded-2xl border border-dashed border-[var(--line)] p-7 text-center text-sm text-[var(--muted)]">
           لا توجد مواعيد متاحة خلال الفترة الحالية. يمكن اختيار مدرب آخر أو المتابعة لاحقًا.
         </div>
       ) : (
         <>
           {/* Day selection */}
           <div className="mt-5">
-            <div className="mb-2 flex items-center gap-2 text-xs font-bold text-[#b3c0bb]">
-              <CalendarDays size={14} />
+            <div className="mb-2 flex items-center gap-2 text-xs font-bold text-[var(--text)]">
+              <CalendarDays size={14} className="text-[var(--cobalt)]" />
               <span>اختيار اليوم</span>
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
@@ -127,8 +127,8 @@ export function BookingForm({
                   onClick={() => chooseDate(d.date)}
                   className={`min-h-16 min-w-28 rounded-2xl border px-3 text-right transition-all ${
                     date === d.date
-                      ? "border-[var(--flare)] bg-[var(--flare)] text-[#1a0800] shadow-md shadow-[var(--flare)]/20 font-black"
-                      : "border-white/7 bg-[#07110e] text-[#84988f] hover:border-white/20"
+                      ? "border-[var(--cobalt)] bg-[var(--cobalt)] text-white shadow-md shadow-[var(--cobalt)]/25 font-black"
+                      : "border-[var(--line)] bg-[var(--surface-2)] text-[var(--muted)] hover:border-[var(--cobalt)]/50"
                   }`}
                 >
                   <div className="text-xs font-extrabold">{d.label}</div>
@@ -140,8 +140,8 @@ export function BookingForm({
 
           {/* Time slot selection */}
           <div className="mt-5">
-            <div className="mb-2 flex items-center gap-2 text-xs font-bold text-[#b3c0bb]">
-              <Clock3 size={14} />
+            <div className="mb-2 flex items-center gap-2 text-xs font-bold text-[var(--text)]">
+              <Clock3 size={14} className="text-[var(--cobalt)]" />
               <span>اختيار الموعد</span>
             </div>
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -153,8 +153,8 @@ export function BookingForm({
                   onClick={() => chooseTime(s)}
                   className={`min-h-11 rounded-xl border text-xs font-black transition-all ${
                     time === s
-                      ? "border-[var(--flare)] bg-[var(--flare)] text-[#1a0800] shadow-md shadow-[var(--flare)]/20"
-                      : "border-white/7 bg-[#07110e] text-[#91a49b] hover:border-white/20"
+                      ? "border-[var(--cobalt)] bg-[var(--cobalt)] text-white shadow-md shadow-[var(--cobalt)]/25"
+                      : "border-[var(--line)] bg-[var(--surface-2)] text-[var(--text)] hover:border-[var(--cobalt)]/50"
                   }`}
                 >
                   {s}
@@ -164,13 +164,13 @@ export function BookingForm({
           </div>
 
           {/* Training location */}
-          <label className="mt-5 block text-xs text-[#82968d]">
+          <label className="mt-5 block text-xs text-[var(--muted)]">
             مكان التدريب
             <select
               disabled={pending}
               value={location}
               onChange={(e) => chooseLocation(e.target.value)}
-              className="mt-2 min-h-12 w-full rounded-xl border border-white/8 bg-[#07110e] px-3 text-sm text-[var(--text)] outline-none focus:border-[var(--flare)]"
+              className="mt-2 min-h-12 w-full rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-3 text-sm text-[var(--text)] outline-none focus:border-[var(--cobalt)]"
             >
               {locations.map((l) => (
                 <option key={l} value={l}>
@@ -181,39 +181,39 @@ export function BookingForm({
           </label>
 
           {/* Pricing Summary */}
-          <div className="mt-5 rounded-2xl bg-[#07110e] p-4 text-xs">
+          <div className="mt-5 rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-2)] p-4 text-xs">
             <div className="flex justify-between text-sm">
-              <span className="text-[#84988f]">قيمة الجلسة التدريبية:</span>
-              <b className="text-white">{sessionRate.toLocaleString("ar-EG")} ج.م</b>
+              <span className="text-[var(--muted)]">قيمة الجلسة التدريبية:</span>
+              <b className="text-[var(--text)]">{sessionRate.toLocaleString("ar-EG")} ج.م</b>
             </div>
-            <div className="mt-1 flex justify-between text-[11px] text-[#71867c]">
+            <div className="mt-1 flex justify-between text-[11px] text-[var(--muted-2)]">
               <span>رسوم التشغيل وحجز الموعد:</span>
               <span>10 ج.م</span>
             </div>
-            <div className="mt-2 border-t border-white/5 pt-2 flex justify-between text-xs font-black text-amber-300">
+            <div className="mt-2 border-t border-[var(--line-soft)] pt-2 flex justify-between text-xs font-black text-amber-300">
               <span>الإجمالي المطلوب:</span>
-              <span>{(sessionRate + 10).toLocaleString("ar-EG")} ج.م</span>
+              <span className="tabular font-black">{(sessionRate + 10).toLocaleString("ar-EG")} ج.م</span>
             </div>
-            <p className="mt-2 text-[10px] text-[#60756b]">
-              الدفع يتم عبر تحويل بنكي / انستاباي / فودافون كاش وتأكيد الإيصال على واتساب.
+            <p className="mt-2 text-[10px] text-[var(--muted-2)]">
+              الدفع عبر انستاباي أو فودافون كاش وتأكيد الإيصال على واتساب · حجزك مؤمّن ومسترد بالكامل في حال إلغاء الجلسة.
             </p>
           </div>
 
           {/* Active package usage */}
           {packageId && packageRemaining > 0 && (
-            <div className="mt-3 rounded-2xl border border-[var(--flare)]/20 bg-[var(--flare)]/5 p-4">
-              <div className="flex items-center gap-2 text-sm font-black text-[var(--flare)]">
+            <div className="mt-3 rounded-2xl border border-[var(--cobalt)]/30 bg-[var(--cobalt)]/10 p-4">
+              <div className="flex items-center gap-2 text-sm font-black text-[var(--cobalt)]">
                 <Package size={15} />
                 <span>لديك باقة تدريبية مفعلة</span>
               </div>
-              <p className="mt-1 text-xs text-[#8aa098]">
+              <p className="mt-1 text-xs text-[var(--muted)]">
                 متبقي لديك {packageRemaining} حصص. يمكنك حجز هذا الموعد مباشرة خصماً من الباقة.
               </p>
               <button
                 type="button"
                 disabled={pending}
                 onClick={usePackage}
-                className="mt-3 min-h-11 w-full rounded-xl border border-[var(--flare)]/30 bg-[var(--flare)]/15 text-xs font-black text-[var(--flare)] transition hover:bg-[var(--flare)]/25 disabled:opacity-50"
+                className="mt-3 min-h-11 w-full rounded-xl border border-[var(--cobalt)]/40 bg-[var(--cobalt)]/20 text-xs font-black text-white transition hover:bg-[var(--cobalt)]/30 disabled:opacity-50"
               >
                 استخدام حصة من الباقة بدون تحويل جديد
               </button>
@@ -225,7 +225,7 @@ export function BookingForm({
             type="button"
             disabled={pending || !date || !time || !location}
             onClick={bookManual}
-            className="btn-flare mt-5 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl text-sm font-black shadow-lg shadow-[var(--flare)]/25 transition-all disabled:opacity-50"
+            className="btn-cobalt mt-5 min-h-13 w-full rounded-2xl text-sm font-black shadow-lg shadow-[var(--cobalt)]/20 transition-all disabled:opacity-50"
           >
             <span>{pending ? "جارٍ تسجيل طلب الحجز..." : "المتابعة لحجز الموعد والدفع عبر WhatsApp"}</span>
             <ArrowLeft size={16} />
@@ -237,7 +237,7 @@ export function BookingForm({
               type="button"
               disabled={pending}
               onClick={enablePackage}
-              className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 text-xs font-bold text-[#84988f] transition hover:bg-white/5 disabled:opacity-50"
+              className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--line)] text-xs font-bold text-[var(--muted)] transition hover:bg-white/5 disabled:opacity-50"
             >
               <Package size={14} />
               <span>تفعيل باقة تجريبية مجانية (8 حصص)</span>

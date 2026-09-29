@@ -69,7 +69,7 @@ export default async function Dashboard() {
           className={`rounded-[2.5rem] p-6 text-white ${
             upcoming.status === "pending"
               ? "border border-amber-400/30 bg-amber-400/10 text-amber-200"
-              : "bg-[var(--flare)] text-[#1a0800]"
+              : "bg-[var(--cobalt)] text-white shadow-lg shadow-[var(--cobalt)]/20"
           }`}
         >
           <div className="flex items-center justify-between text-xs font-black">

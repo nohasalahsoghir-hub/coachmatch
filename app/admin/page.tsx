@@ -118,19 +118,19 @@ export default async function AdminPage() {
   return (
     <div className="space-y-8 pb-24">
       {/* Header Banner */}
-      <section className="rounded-[2.5rem] border border-white/10 bg-gradient-to-br from-[#1A2821] to-[#0D1512] p-6 sm:p-8">
+      <section className="surface-raised p-6 sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--flare)]/15 px-3 py-1 text-xs font-bold text-[var(--flare)]">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--cobalt)]/15 px-3 py-1 text-xs font-bold text-[var(--cobalt)]">
             <ShieldCheck size={14} />
             <span>لوحة تحكم المدير العام (Super Admin)</span>
           </span>
-          <span className="text-xs text-[#84988f]">مرحباً، {profile.full_name} 👋</span>
+          <span className="text-xs text-[var(--muted)]">مرحباً، {profile.full_name} 👋</span>
         </div>
 
-        <h1 className="mt-3 font-display text-2xl font-black text-white sm:text-3xl">
+        <h1 className="mt-3 font-display text-2xl font-black text-[var(--text)] sm:text-3xl">
           مركز العمليات والتأكيد اليدوي
         </h1>
-        <p className="mt-2 text-xs leading-6 text-[#9ab0a7] sm:text-sm">
+        <p className="mt-2 text-xs leading-6 text-[var(--muted)] sm:text-sm">
           تحقق من إيصالات التحويل المستلمة على WhatsApp، وأكّد أو الغِ الحجوزات بضغطة زر واحدة.
         </p>
       </section>
@@ -154,7 +154,7 @@ export default async function AdminPage() {
           value={verifiedCoaches ?? 0}
         />
         <MetricCard
-          icon={<TrendingUp className="text-[var(--flare)]" size={20} />}
+          icon={<TrendingUp className="text-[var(--cobalt)]" size={20} />}
           title="إجمالي الحجوزات"
           value={totalBookings ?? 0}
         />
@@ -164,7 +164,7 @@ export default async function AdminPage() {
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="font-display text-xl font-black text-white flex items-center gap-2">
+            <h2 className="font-display text-xl font-black text-[var(--text)] flex items-center gap-2">
               <span>طلبات الحجز بانتظار تحويل الواتساب</span>
               {pendingBookings.length > 0 && (
                 <span className="rounded-full bg-amber-400 px-2 py-0.5 text-xs font-black text-[#1a0800]">
@@ -172,17 +172,17 @@ export default async function AdminPage() {
                 </span>
               )}
             </h2>
-            <p className="mt-1 text-xs text-[#84988f]">
+            <p className="mt-1 text-xs text-[var(--muted)]">
               عند استلام إيصال التحويل (انستاباي / كاش) على واتساب، اضغط على زر "تأكيد" لتثبيت الموعد رسمياً.
             </p>
           </div>
         </div>
 
         {pendingBookings.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-white/10 bg-[var(--surface)] p-10 text-center">
+          <div className="rounded-3xl border border-dashed border-[var(--line)] bg-[var(--surface)] p-10 text-center">
             <CheckCircle2 size={40} className="mx-auto text-emerald-400/60" />
-            <h3 className="mt-3 text-base font-bold text-white">لا توجد طلبات حجز معلقة حالياً</h3>
-            <p className="mt-1 text-xs text-[#84988f]">
+            <h3 className="mt-3 text-base font-bold text-[var(--text)]">لا توجد طلبات حجز معلقة حالياً</h3>
+            <p className="mt-1 text-xs text-[var(--muted)]">
               جميع الحجوزات تم تأكيدها أو لا توجد طلبات جديدة قيد الانتظار.
             </p>
           </div>
@@ -224,31 +224,31 @@ export default async function AdminPage() {
         </section>
 
         {/* Recent Confirmed Bookings */}
-        <section className="rounded-3xl border border-white/10 bg-[var(--surface)] p-6">
-          <div className="flex items-center justify-between border-b border-white/5 pb-3">
-            <h2 className="text-base font-black text-white">آخر الحجوزات المؤكدة</h2>
-            <span className="text-xs text-[#84988f]">{recentBookings?.length ?? 0} عمليات مؤكدة</span>
+        <section className="surface p-6">
+          <div className="flex items-center justify-between border-b border-[var(--line-soft)] pb-3">
+            <h2 className="text-base font-black text-[var(--text)]">آخر الحجوزات المؤكدة</h2>
+            <span className="text-xs text-[var(--muted)]">{recentBookings?.length ?? 0} عمليات مؤكدة</span>
           </div>
 
           <div className="mt-4 space-y-3">
             {!recentBookings || recentBookings.length === 0 ? (
-              <p className="py-6 text-center text-xs text-[#71867c]">لا توجد حجوزات مؤكدة بعد.</p>
+              <p className="py-6 text-center text-xs text-[var(--muted-2)]">لا توجد حجوزات مؤكدة بعد.</p>
             ) : (
               recentBookings.map((b: any) => (
-                <div key={b.id} className="flex items-center justify-between rounded-2xl bg-[#07110e] p-3.5 text-xs">
+                <div key={b.id} className="flex items-center justify-between rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-2)] p-3.5 text-xs">
                   <div>
-                    <div className="font-mono font-bold text-white">
+                    <div className="font-mono font-bold text-[var(--text)]">
                       {b.reference_code || `CM-${b.id.slice(0, 6).toUpperCase()}`}
                     </div>
-                    <div className="mt-0.5 text-[11px] text-[#84988f]">
+                    <div className="mt-0.5 text-[11px] text-[var(--muted)]">
                       موعد الجلسة: {b.session_date} · {String(b.start_time).slice(0, 5)}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-display font-black text-emerald-400">
+                    <div className="font-display font-black text-emerald-400 tabular">
                       {Number(b.total_amount).toLocaleString("ar-EG")} ج.م
                     </div>
-                    <span className="text-[10px] text-emerald-300">مؤكد ✅</span>
+                    <span className="text-[10px] text-emerald-300 font-bold">مؤكد ✅</span>
                   </div>
                 </div>
               ))
@@ -276,14 +276,14 @@ function MetricCard({
       className={`rounded-3xl border p-5 transition-all ${
         highlight
           ? "border-amber-400/30 bg-amber-400/5 shadow-lg shadow-amber-400/10"
-          : "border-white/10 bg-[var(--surface)]"
+          : "border-[var(--line)] bg-[var(--surface)]"
       }`}
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs text-[#84988f]">{title}</span>
+        <span className="text-xs text-[var(--muted)]">{title}</span>
         {icon}
       </div>
-      <div className="mt-3 font-display text-2xl font-black text-white">{value}</div>
+      <div className="mt-3 font-display text-2xl font-black text-[var(--text)] tabular">{value}</div>
     </div>
   );
 }

@@ -13,7 +13,7 @@ export async function Header() {
   return (
     <header
       className="sticky top-0 z-40 border-b backdrop-blur-xl"
-      style={{ borderColor: "var(--line-soft)", background: "rgba(4,11,9,0.85)" }}
+      style={{ borderColor: "var(--line-soft)", background: "rgba(21,24,28,0.85)" }}
     >
       <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex shrink-0 items-center gap-2.5 font-black tracking-tight" id="header-logo">
