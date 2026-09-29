@@ -27,3 +27,9 @@ yarn-error.log*
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# IDE & Build cache
+.vscode/
+*.tsbuildinfo
+supabase/.temp/
+tall
