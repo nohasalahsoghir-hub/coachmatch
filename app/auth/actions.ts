@@ -25,7 +25,7 @@ export async function signUp(_prevState: ActionState, formData: FormData): Promi
     const pwned = await checkPwnedPassword(password);
     if (pwned.compromised) return { error: "كلمة المرور دي ظهرت في تسريبات معروفة. اختر كلمة مرور مختلفة." };
   } catch {
-    return { error: "تعذر التحقق من أمان كلمة المرور الآن. أعد المحاولة." };
+    return { error: "تعذر التحقق من أمان كلمة المرور الآن. يمكن إعادة المحاولة." };
   }
   if (!termsAccepted) return { error: "لازم توافق على شروط الاستخدام وسياسة الخصوصية قبل إنشاء الحساب" };
   if (!EGYPT_PHONE_REGEX.test(phone)) return { error: "رقم الهاتف غير صحيح (مثال: 01012345678)" };
@@ -92,7 +92,7 @@ export async function updatePassword(_prevState: ActionState, formData: FormData
     const pwned = await checkPwnedPassword(password);
     if (pwned.compromised) return { error: "كلمة المرور دي ظهرت في تسريبات معروفة. اختر كلمة مرور مختلفة." };
   } catch {
-    return { error: "تعذر التحقق من أمان كلمة المرور الآن. أعد المحاولة." };
+    return { error: "تعذر التحقق من أمان كلمة المرور الآن. يمكن إعادة المحاولة." };
   }
 
   const s = await createClient();
