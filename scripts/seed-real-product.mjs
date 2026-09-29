@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { randomBytes } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 
 const root = process.cwd();
@@ -14,8 +15,9 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!url || !key) throw new Error("Supabase server credentials are missing in .env.local");
 const db = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
-const PASSWORD = "CoachMatch2026!";
+const PASSWORD = process.env.COACHMATCH_SEED_PASSWORD?.trim() || randomBytes(18).toString("base64url");
 const SEED_FLAG = true;
+const TARGET_DEMO_COACHES = 20;
 const SLOT_STARTS = ["08:00","10:00","12:00","14:00","16:00","18:00","20:00"];
 let userCache = null;
 
@@ -115,7 +117,7 @@ async function ensureSeedCoachPool(coachUserId, sports) {
     existing.push({ id: coachUserId });
   }
 
-  const removeCount = Math.max(0, existing.length - 120);
+  const removeCount = Math.max(0, existing.length - TARGET_DEMO_COACHES);
   if (removeCount > 0) {
     const removable = existing.filter((r) => r.id !== coachUserId).slice(-removeCount);
     for (const row of removable) {
@@ -130,15 +132,14 @@ async function ensureSeedCoachPool(coachUserId, sports) {
   const firstNames = ["أحمد","عمر","يوسف","محمد","محمود","علي","زياد","كريم","عمرو","حسن","خالد","سيف","طارق","شريف","إسلام","ياسين","عبدالله","رامي","مروان","أنس","بدر","حسام","وليد","فارس","مازن","زين","إياد","حازم","آدم","مصطفى"];
   const lastNames = ["عادل","حسن","السيد","إبراهيم","سالم","محمود","حمدي","منصور","علي","خليل","أمين","صالح"];
   const cities = ["القاهرة","الجيزة","الإسكندرية","المنصورة","طنطا","الزقازيق","أسيوط","سوهاج","الأقصر","قنا","أسوان","بورسعيد"];
-  const targetCount = 120;
-  const targetEmails = ["coach.seed@coachmatch.test", ...Array.from({ length: 119 }, (_, i) => `coach.seed.${String(i + 1).padStart(3, "0")}@coachmatch.test`)];
+    const targetEmails = ["coach.seed@coachmatch.test", ...Array.from({ length: TARGET_DEMO_COACHES - 1 }, (_, i) => `coach.seed.${String(i + 1).padStart(3, "0")}@coachmatch.test`)];
   const targetIds = [];
   for (let idx = 0; idx < targetEmails.length; idx++) {
     const email = targetEmails[idx];
     const fullName = idx === 0 ? "مروان حسن" : `${firstNames[(idx - 1) % firstNames.length]} ${lastNames[Math.floor((idx - 1) / firstNames.length) % lastNames.length]}`;
     const phone = `011900${String(idx + 1).padStart(5, "0")}`;
     const authUser = await ensureUser(email, fullName, phone, "coach");
-    const sport = sports[idx % sports.length];
+    const sport = seededSports[idx % seededSports.length];
     const rate = idx === 0 ? 320 : 180 + (idx % 10) * 40 + (idx % 3) * 15;
     targetIds.push(authUser.id);
     await must("seed profile", () => db.from("profiles").upsert({ id: authUser.id, linked_auth_id: authUser.id, full_name: fullName, phone, role: "coach", is_demo: true }, { onConflict: "id" }));
@@ -167,7 +168,7 @@ async function ensureSeedCoachPool(coachUserId, sports) {
     await db.from("profiles").delete().eq("id", row.id).eq("is_demo", true);
   }
 
-  const finalCoaches = await must("seed coach list", () => db.from("coaches").select("id").eq("is_demo", true).order("created_at", { ascending: true }).limit(120));
+  const finalCoaches = await must("seed coach list", () => db.from("coaches").select("id").eq("is_demo", true).order("created_at", { ascending: true }).limit(TARGET_DEMO_COACHES));
   await must("reset seed coach sports", () => db.from("coach_sports").delete().eq("is_demo", true));
   await must("reset seed availability", () => db.from("coach_availability").delete().eq("is_demo", true));
 
@@ -217,14 +218,13 @@ async function seed() {
   await resetLegacyDemoTables();
   await resetSeedTransactions();
   const athlete = await ensureUser("athlete.seed@coachmatch.test", "نور أحمد", "01180090001", "athlete");
-  const admin = await ensureUser("admin.seed@coachmatch.test", "إدارة CoachMatch", "01180090002", "admin");
-  const coachUser = await ensureUser("coach.seed@coachmatch.test", "مروان حسن", "01180090003", "coach");
+    const coachUser = await ensureUser("coach.seed@coachmatch.test", "مروان حسن", "01180090003", "coach");
 
   await must("athlete profile", () => db.from("profiles").upsert({ id: athlete.id, linked_auth_id: athlete.id, full_name: "نور أحمد", phone: "01180090001", role: "athlete", is_demo: true }, { onConflict: "id" }));
-  await must("admin profile", () => db.from("profiles").upsert({ id: admin.id, linked_auth_id: admin.id, full_name: "إدارة CoachMatch", phone: "01180090002", role: "admin", is_demo: true }, { onConflict: "id" }));
 
   const sports = await must("sports", () => db.from("sports").select("id,name_ar,slug").eq("is_active", true).order("sort_order"));
-  if (sports.length < 10) throw new Error("بيانات الرياضات غير مكتملة");
+  if (sports.length < 5) throw new Error("بيانات الرياضات غير مكتملة");
+  const seededSports = sports.slice(0, 5);
 
   const coachIds = await ensureSeedCoachPool(coachUser.id, sports);
   const coach1 = await must("coach1", () => db.from("coaches").select("id,session_rate,package_8_rate,training_locations").eq("id", coachUser.id).single());
@@ -302,28 +302,13 @@ async function seed() {
   await singleBooking(coach3Row, cancelled, "18:00", "CM-SEED-REFUND", "cancelled", true);
 
 
-  const verificationCoaches = await must("verification coaches", () => db.from("coaches").select("id,created_at").eq("is_demo", true).order("created_at").limit(12));
-  await must("verification", () => db.from("coach_verification_requests").insert(verificationCoaches.map((c, i) => ({
-    coach_id: c.id,
-    status: i < 4 ? "approved" : "pending",
-    submitted_at: new Date(now.getTime() - (i + 1) * 86400000).toISOString(),
-    reviewed_at: i < 4 ? new Date(now.getTime() - 86400000).toISOString() : null,
-    reviewed_by: i < 4 ? admin.id : null,
-    rejection_reason: null,
-    documents: { seed: true, document_count: 3 },
-    is_demo: true,
-  }))));
-
   await must("notifications", () => db.from("notifications").insert([
     { user_id: athlete.id, type: "booking", title: "تم تأكيد حجزك", body: "تم تأكيد جلستك القادمة بعد نجاح الدفع.", link: "/dashboard", is_demo: true },
     { user_id: athlete.id, type: "package", title: "باقتك فعالة", body: "لديك 6 حصص متبقية مع مدربك.", link: "/dashboard", is_demo: true },
     { user_id: coach1.id, type: "booking", title: "حجز جديد", body: "لديك جلسة مؤكدة جديدة.", link: "/coach/dashboard", is_demo: true },
-    { user_id: admin.id, type: "verification", title: "طلبات تحتاج مراجعة", body: "هناك طلبات توثيق جاهزة للمتابعة.", link: "/admin", is_demo: true },
   ]));
 
-  await must("dispute", () => db.from("disputes").insert({ booking_id: upcomingBooking.id, opened_by: athlete.id, reason: "استفسار عن موعد الجلسة", details: "سجل اختبار لمسار النزاع والإدارة.", status: "under_review", is_demo: true }));
-
-  console.log(JSON.stringify({ ok: true, accounts: { athlete: "athlete.seed@coachmatch.test", coach: "coach.seed@coachmatch.test", admin: "admin.seed@coachmatch.test" }, password: PASSWORD, seed_coaches: coachIds.length, seed_availability: coachIds.length * SLOT_STARTS.length }));
+  console.log(JSON.stringify({ ok: true, accounts: { athlete: "athlete.seed@coachmatch.test", coach: "coach.seed@coachmatch.test", admin: "admin.seed@coachmatch.test" }, password: PASSWORD, seed_coaches: coachIds.length, seed_sports: seededSports.map((s) => s.name_ar), seed_availability: coachIds.length * SLOT_STARTS.length, seed_password: PASSWORD }));
 }
 
 await seed();
