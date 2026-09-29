@@ -14,7 +14,7 @@ export default function ForgotPasswordPage() {
     <main dir="rtl" className="mx-auto flex min-h-[70vh] max-w-md items-center px-4 py-10">
       <form action={formAction} className="w-full rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-6 shadow-xl">
         <h1 className="text-2xl font-black text-[var(--text)]">نسيت كلمة المرور؟</h1>
-        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">اكتبي بريدك الإلكتروني وهنبعتلك رابط لتعيين كلمة مرور جديدة.</p>
+        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">أدخل البريد الإلكتروني وسيصلك رابط لتعيين كلمة مرور جديدة.</p>
         <label className="mt-5 block text-sm font-bold text-[var(--text)]">
           البريد الإلكتروني
           <input name="email" type="email" required className="field mt-2 w-full" autoComplete="email" />
