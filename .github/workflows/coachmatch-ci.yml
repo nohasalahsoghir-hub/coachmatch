@@ -32,9 +32,28 @@ jobs:
             echo 'Legacy radius tokens found.'
             exit 1
           fi
-          if grep -RniE 'اختاري|اكتشفي|ابدئي|أضيفي|استخدمي|راجعي|جربي|تأكدي|حاولي|اكتبي|اطلبي|فعّلي|تعيدي|سجّلي|عايزة' app components lib --include='*.tsx' --include='*.ts' --include='*.css'; then
-            echo 'Gendered Arabic user-facing copy found.'
-            exit 1
-          fi
-          echo 'Gender-neutral Arabic copy audit passed.'
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+          const roots = ["app", "components", "lib"];
+          const banned = ["اختاري","اكتشفي","ابدئي","أضيفي","استخدمي","راجعي","جربي","تأكدي","حاولي","اكتبي","اطلبي","فعّلي","تعيدي","سجّلي","عايزة"];
+          const matches = [];
+          function walk(dir) {
+            for (const name of fs.readdirSync(dir)) {
+              const file = path.join(dir, name);
+              const stat = fs.statSync(file);
+              if (stat.isDirectory()) walk(file);
+              else if (/\.(tsx|ts|css)$/.test(name)) {
+                const text = fs.readFileSync(file, "utf8");
+                for (const term of banned) if (text.includes(term)) matches.push({ file, term });
+              }
+            }
+          }
+          for (const root of roots) walk(root);
+          if (matches.length) {
+            console.error("Gendered Arabic user-facing copy found:", JSON.stringify(matches, null, 2));
+            process.exit(1);
+          }
+          console.log("Gender-neutral Arabic copy audit passed.");
+          NODE
           echo 'Design audit passed.'
